@@ -6,8 +6,8 @@ public static class EnteringPoint
     [STAThread]
     public static int Main(string[] args)
     {
-        Debug.Log("<GRE> Enter \"s\" or \"c\" in order to start Server(s) or Client(c)." +
-                     "\n_______________________________________________________________");
+        Debug.Log("<DGE>Enter \"s\" or \"c\" in order to start Server(s) or Client(c)." +
+                     "\n__________________________________________________________");
         string? command;
         while (true)
         {

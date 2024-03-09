@@ -1,10 +1,9 @@
 ﻿using DILDO.server.models;
 using DILDO.net.IO;
 
-using System;
 using System.Text;
 
-namespace DILDO.server.core.factories.PacketFactories
+namespace DILDO.server.core.factories
 {
     /// <summary>
     /// Make sure when building packet

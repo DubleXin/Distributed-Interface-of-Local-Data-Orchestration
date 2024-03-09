@@ -1,10 +1,7 @@
 ﻿using DILDO.server.models;
 using DILDO.net.IO;
 
-using System;
-
-
-namespace DILDO.server.core.factories.PacketFactories
+namespace DILDO.server.core.factories
 {
     public class PacketMessage : IPacketFactory
     {

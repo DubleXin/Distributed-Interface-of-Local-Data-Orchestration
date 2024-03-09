@@ -8,7 +8,7 @@ namespace DILDO
 
         public static void Log<From>(string message)
         {
-            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.ForegroundColor = ConsoleColor.Green;
 
             string from = typeof(From).Name;
             string time = DateTime.Now.ToString();

@@ -1,9 +1,10 @@
 ﻿using DILDO.server.controllers;
 using DILDO.server.models;
+
 using System.Net;
 using System.Text;
 
-namespace DILDO.server.Config;
+namespace DILDO.server.config;
 public class ServerSetup
 {
     public ServerSetup(ref ServerModel model, PacketHandler handler)

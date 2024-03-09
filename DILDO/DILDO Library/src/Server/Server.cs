@@ -1,5 +1,5 @@
 ﻿using DILDO.client.MVM.model;
-using DILDO.server.Config;
+using DILDO.server.config;
 using DILDO.server.controllers;
 using DILDO.server.models;
 using ServerModel = DILDO.server.models.ServerModel;
