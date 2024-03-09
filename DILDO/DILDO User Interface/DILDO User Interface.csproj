@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>DILDO_User_Interface</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="DILDO">
+      <HintPath>..\DILDO Library\bin\Debug\net7.0\DILDO.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
