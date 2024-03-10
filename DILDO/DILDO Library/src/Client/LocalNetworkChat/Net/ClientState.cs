@@ -136,6 +136,7 @@ public class ClientState : StateProfile, IDisposable
         var endpoint = new IPEndPoint
         (IPAddress.Broadcast, ServerModel.DEFAULT_SERVER_RECEIVE_PORT);
         _sendClient.Send(sendingData, sendingData.Length, endpoint);
+        Debug.Log<ClientState>($"<DMA> Requesting connection to server named: <MAG>{_serverNames[guid]}");
     }
 
     public override void Close() 

@@ -1,4 +1,5 @@
-﻿using DILDO.client.MVM.model;
+﻿using DILDO.client;
+using DILDO.client.MVM.model;
 using DILDO.server;
 
 namespace DILDO;
@@ -101,6 +102,23 @@ public static class NetworkingInput
         else
             Debug.Exception("ConfigurateServer(...) NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
+    }
+
+    public static void Connect(int index)
+    {
+        var servers = GetAvailableServers();
+        if (servers is not null) 
+        {
+            int i = -1;
+            foreach (var server in servers)
+            {
+                i++;
+                if (i != index)
+                    continue;
+
+                ClientState.Instance.ConnectToServer(server.guid);
+            } 
+        }
     }
 
 }
