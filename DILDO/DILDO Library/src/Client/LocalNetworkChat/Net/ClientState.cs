@@ -1,5 +1,4 @@
-﻿using DILDO.client.MVM.model;
-using DILDO.server.models;
+﻿using DILDO.server.models;
 using DILDO.net.IO;
 using DILDO.server.core.factories;
 using static DILDO.server.controllers.PacketHandler;
@@ -8,27 +7,28 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+
 using ServerModel = DILDO.server.models.ServerModel;
 using DILDO.server;
 
 namespace DILDO.client;
 public class ClientState : StateProfile, IDisposable
 {
-    public static ClientState Instance { get; private set; }
+    public static ClientState? Instance { get; private set; }
 
-    private UdpClient _sendClient;
-    private UdpClient _receiveClient;
+    private UdpClient? _sendClient;
+    private UdpClient? _receiveClient;
     public Action? OnUserConnectEvent;
     public Action? OnUserDisconnectEvent;
     public Action<(Guid, string)[]>? OnServerAddressFound;
 
-    private ConcurrentDictionary<Guid, string> _serverNames;
-    private ConcurrentDictionary<Guid, Guid> _serverConnectInfo;
-    private ConcurrentDictionary<Guid, UDPPacket> _receivedPackets;
+    private ConcurrentDictionary<Guid, string>? _serverNames;
+    private ConcurrentDictionary<Guid, Guid>? _serverConnectInfo;
+    private ConcurrentDictionary<Guid, UDPPacket>? _receivedPackets;
 
     private Guid _id;
 
-    private CancellationTokenSource _cts;
+    private CancellationTokenSource? _cts;
 
     public ClientState() : base()
     {
@@ -56,7 +56,7 @@ public class ClientState : StateProfile, IDisposable
         _receivedPackets = new();
         _serverConnectInfo = new();
 
-        Debug.Log<ClientState>($"<CYA>User [{NetworkingData.This.UserName}]<WHI> Client Started.");
+        Debug.Log<ClientState>($"<WHI> Client Started.");
 
         ListenToConnection();
     }
@@ -91,7 +91,7 @@ public class ClientState : StateProfile, IDisposable
                     TryAddPacketToList(packet);
                     TryAddServerToList(packet);
                 }
-                catch (Exception ex){ }
+                catch { }
             }
             _cts.Dispose();
             Dispose();
@@ -146,14 +146,14 @@ public class ClientState : StateProfile, IDisposable
 
     public void Dispose()
     {
-        Debug.Log<ServerState>($"<CYA>User [{NetworkingData.This.UserName}]<DRE> Closes client.");
-
         _sendClient.Close();
 
         _receiveClient.Dispose();
         _sendClient.Dispose();
 
+        Debug.Log<ClientState>("<DRE> Client Closed and Disposed.");
         StateBroker.Instance.OnStateClosed?.Invoke();
     }
+
 }
 

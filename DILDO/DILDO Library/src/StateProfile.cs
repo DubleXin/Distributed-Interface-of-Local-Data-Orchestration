@@ -20,6 +20,7 @@ public abstract class StateProfile
     {
         OnPacketReceived += action;
     }
+
     public abstract void Launch();
     public abstract void Close();
 }

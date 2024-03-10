@@ -1,7 +1,8 @@
-﻿using DILDO.client.MVM.model;
-using DILDO.server.config;
-using DILDO.server.controllers;
+﻿using DILDO.server.controllers;
 using DILDO.server.models;
+using System.Net;
+using System.Reflection;
+using System.Text;
 using ServerModel = DILDO.server.models.ServerModel;
 
 namespace DILDO.server;
@@ -22,20 +23,35 @@ public class ServerState  : StateProfile, IDisposable
         _cts = new();
         _server = new();
         _packetHandler = new(_server, this);
-        Debug.Log<ServerState>($"<CYA>User [{NetworkingData.This.UserName}]<WHI> Starts Server.");
+        Debug.Log<ServerState>($"<WHI> Server Started.");
         Task.Run(Process);
     }
     private void Process()
     {
-        new ServerSetup(ref _server, _packetHandler);
-        while (!_cts.Token.IsCancellationRequested)
-        {
+        _packetHandler.Broadcast();
 
-        }
+        _server.Client.EnableBroadcast = true;
+        Task.Run(() =>
+        {
+            Debug.Log<ServerState>($"<GRA> Server is listening.");
+            var endpoint = new IPEndPoint(IPAddress.Any, 0);
+            while (!_server.CancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    byte[] buffer = _server.Client.Receive(ref endpoint);
+                    string encoded = Encoding.UTF32.GetString(buffer);
+                    _packetHandler.InvokePacketReceive(encoded);
+                }
+                catch { }
+            }
+            Debug.Log<ServerState>($"<DRE> Server Closed and Disposed.");
+            StateBroker.Instance.OnStateClosed?.Invoke();
+        });
+        while (!_cts.Token.IsCancellationRequested) { }
         _packetHandler.BroadcastCancellationToken.Cancel();
         _packetHandler.PacketHandlingCancellationToken.Cancel();
     }
-
     public override void Close() => _cts.Cancel();
     public void Dispose() => _server.Dispose();
 }

@@ -2,31 +2,35 @@
 using DILDO.server.models;
 using DILDO.server.core.factories;
 using static DILDO.net.IO.PacketReaderBroker;
+using ServerModel = DILDO.server.models.ServerModel;
 
 using System.Collections.Concurrent;
 using System.Net;
-using DILDO.client.MVM.model;
-using ServerModel = DILDO.server.models.ServerModel;
 
 namespace DILDO.server.controllers
 {
     public class PacketHandler
     {
+        public int TickRate { get => _tickDelay * 1024; set => _tickDelay = 1024 / value; }
+        private int _tickDelay;
+
         public enum PacketType : int
         {
-            BroadcastSession = 0,
+            BroadcastCredentials = 0,
             SessionConfirm =1
         }
         public ConcurrentDictionary<Guid, UDPPacket> ReceivedPacketBuffer { get; set; }
         public ConcurrentDictionary<Guid, UDPPacket> SendPacketBuffer { get; set; }
-        private ConcurrentDictionary<Guid, int> _packetAttempts;
 
-        public ServerModel @ServerModel { get => _serverModel; }
+        private readonly ConcurrentDictionary<Guid, int> _packetAttempts;
+
+        private readonly ServerState _server;
 
         private readonly ServerModel _serverModel;
-        private readonly Guid _sessionPacketID = Guid.NewGuid();
-        private readonly int _sessionOpCode = (int)PacketType.BroadcastSession;
-        private readonly Guid _sessionConfirmID = Guid.NewGuid();
+        private readonly Guid _credentialsPacketID = Guid.NewGuid();
+        private readonly int  _credentialsOpCode = (int)PacketType.BroadcastCredentials;
+        private readonly Guid _credentialsConfirmID = Guid.NewGuid();
+
         public CancellationTokenSource BroadcastCancellationToken 
         { 
             get; 
@@ -37,13 +41,11 @@ namespace DILDO.server.controllers
             get;
             private set;
         }
-        private string _userName;
-        private int _drinkID;
 
-        private readonly ServerState _server;
+        public bool BroadcastCredentials;
 
         public PacketHandler(ServerModel model,
-            ServerState server)
+                            ServerState server)
         {
             _serverModel = model;
             BroadcastCancellationToken = new();
@@ -53,6 +55,9 @@ namespace DILDO.server.controllers
             _packetAttempts = new();
 
             _server = server;
+
+            BroadcastCredentials = false;
+            TickRate = 32;
         }
 
         public void AddPacketToSendQueue(UDPPacket packet, int broadcastAttemts = 1)
@@ -72,9 +77,12 @@ namespace DILDO.server.controllers
             {
                 while (!BroadcastCancellationToken.IsCancellationRequested)
                 {
-                    SendSessionInfo();
+                    if(BroadcastCredentials)
+                        SendCredentials();
+
                     SendMassagesFromBuffer();
                     TryRemoveSentPackets();
+                    Thread.Sleep(_tickDelay);
                 }
                 _server.Dispose();
             });
@@ -89,7 +97,6 @@ namespace DILDO.server.controllers
                         _packetAttempts.TryRemove(item.Key, out _);
                 }
         }
-
         private void SendMassagesFromBuffer()
         {
             foreach (var item in SendPacketBuffer)
@@ -107,29 +114,28 @@ namespace DILDO.server.controllers
             foreach (var item in _packetAttempts)
                 _packetAttempts.TryUpdate(item.Key, item.Value-1, item.Value);
         }
-
-        private void SendSessionInfo()
+        private void SendCredentials()
         {
             var sendingData = PacketFactory.GetFactory
                     (OpCode.BroadcastStringMessage).GetPacket(new string[]
                     {
-                        _sessionPacketID.ToString(),
-                        _sessionOpCode.ToString(),
+                        _credentialsPacketID.ToString(),
+                        _credentialsOpCode.ToString(),
                         _serverModel.ServerID.ToString(),
-                        _userName,
-                        _sessionConfirmID.ToString()
+                        NetworkingData.This.UserName,
+                        _credentialsConfirmID.ToString()
                     }).Data;
 
             if (sendingData is null)
                 return;
             var endpoint = new IPEndPoint
             (IPAddress.Broadcast, _serverModel.ServerSendPort);
+            Debug.Log<PacketHandler>($"<MAG> Sending packet: <DMA>{_serverModel.ServerID}");
             _serverModel.Server.Send(sendingData, sendingData.Length, endpoint);
         }
 
         public void InvokePacketReceive(string data)
         {
-           // Debug.Log("Starting invoking receive method");
             var reader = new PacketReaderBroker(data);
             var packet = new UDPPacket
             {
