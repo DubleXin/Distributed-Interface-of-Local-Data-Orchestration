@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace DILDO
 {
@@ -11,21 +12,36 @@ namespace DILDO
 #if UNITY_5_OR_NEWER
             UnityEngine.Debug.Log(message);
 #else
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("[LOG]     ");
+
+            NonAuthLog<From>(message);
+#endif
+        }
+        public static void Log(string message)
+        {
+#if UNITY_5_OR_NEWER
+            UnityEngine.Debug.Log(message);
+#else
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("[LOG]     ");
+
+            NonAuthLog(message);
+#endif
+        }
+
+        public static void NonAuthLog<From>(string message)
+        {
             Console.ForegroundColor = ConsoleColor.Green;
 
             string from = typeof(From).Name;
             string time = DateTime.Now.ToString();
 
             Console.Write($"{from}\t[{time}]:\t");
-            Log(message);
-#endif
+            NonAuthLog(message);
         }
-
-        public static void Log(string message)
+        public static void NonAuthLog(string message)
         {
-#if UNITY_5_OR_NEWER
-            UnityEngine.Debug.Log(message);
-#else
             Console.ForegroundColor = DEFAULT;
             bool buffer = false;
 
@@ -86,8 +102,52 @@ namespace DILDO
             }
             Console.Write("\n");
             Console.ForegroundColor = DEFAULT;
-#endif
         }
+
+        public static void Exception(string situation, string reason)
+        {
+            int distance = situation.Length - reason.Length;
+
+            if (distance < 2)
+                distance = 2;
+
+            int firstGap = distance / 2;
+            int secondGap = distance - firstGap;
+
+            StringBuilder builder = new();
+            if(situation.Length >= reason.Length)
+            {
+                builder.Append($"<RED>[EXCEPTION]<DGA> >>>>>>>>>>>>>>>>> <DRE>\"{situation}\"<DGA> <<<<<<<<<<<<<<<<<\n");
+                builder.Append($"<RED>[REASON]   <DGA> >>>>>>>>>>>>>>>>> ");
+
+                for (int i = 0; i < firstGap; i++)
+                    builder.Append(' ');
+
+                builder.Append($"<DRE>\"{reason}\"<DGA>");
+
+                for (int i = 0; i < secondGap; i++)
+                    builder.Append(' ');
+
+                builder.Append(" <<<<<<<<<<<<<<<<<");
+            }
+            else
+            {
+                builder.Append($"<RED>[EXCEPTION]<DGA> >>>>>>>>>>>>>>>>> ");
+
+                for (int i = 0; i < -firstGap; i++)
+                    builder.Append(' ');
+
+                builder.Append($"<DRE>\"{situation}\"<DGA>");
+
+                for (int i = 0; i < -secondGap; i++)
+                    builder.Append(' ');
+
+                builder.Append(" <<<<<<<<<<<<<<<<<\n");
+                builder.Append($"<RED>[REASON]   <DGA> >>>>>>>>>>>>>>>>> <DRE>\"{reason}\"<DGA> <<<<<<<<<<<<<<<<<");
+            }
+
+            NonAuthLog(builder.ToString());
+        } 
     }
 }
 

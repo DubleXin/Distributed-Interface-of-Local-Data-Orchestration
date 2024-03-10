@@ -110,55 +110,65 @@ public static class EnteringPoint
 
 #if !UNITY_5_OR_NEWER
 
-        DrawDILDOStart();
-        Debug.Log("<DGE>Enter \"s\" or \"c\" in order to start Server(s) or Client(c)." +
-                     "\n__________________________________________________________");
+        Init();
 
-        string? command;
-        while (true)
+        string? command = null;
+        while (command != "exit")
         {
-            command = Console.ReadLine();
-            if (command is not null && command == "s" || command == "c")
-                break;
+            Read();
+
+            if (command is null)
+                continue;
+
+            if (command.Length == 6 && command.Substring(0, 4) == "init")
+            {
+                if (!NetworkingInput.Init(new User()
+                {
+                    UserName = "DEV",
+                    NetworkingMode = command[5] == 's' ? NetworkingState.SERVER : NetworkingState.CLIENT
+                }))
+                    Debug.Exception("NetworkingInput.Init(User user) actively refuses", "Already initialized");
+            }
+
+            else if (command.Length == 8 && command.Substring(0, 6) == "switch")
+            {
+                NetworkingInput.Switch(command[7] == 's' ? NetworkingState.SERVER : NetworkingState.CLIENT);
+            }
         }
-
-        NetworkingInput.Init(new User()
-        {
-            UserName = "DEV",
-            NetworkingMode = command == "s" ? NetworkingState.SERVER : NetworkingState.CLIENT
-        });
-
-        Console.ReadLine();
-        NetworkingInput.Switch(NetworkingState.SERVER);
-        Console.ReadLine();
-        NetworkingInput.Switch(NetworkingState.CLIENT);
-        Console.ReadLine();
-        NetworkingInput.Switch(NetworkingState.SERVER);
-        Console.ReadLine();
-        NetworkingInput.Switch(NetworkingState.CLIENT);
-        
-        Console.ReadLine();
-
 #endif
-
         return 0;
+
+        void Init()
+        {
+            DrawDILDOStart();
+
+            Debug.NonAuthLog("<DGE>Enter \"init s\" or \"init c\" in order to start Server(s) or Client(c)." +
+                         "\n__________________________________________________________________");
+        }
+        void Read()
+        {
+            Thread.Sleep(300);
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(">> ");
+            command = Console.ReadLine();
+        }
     }
 
     private static void DrawDILDOStart()
     {
-        Debug.Log("<DYE>__/\\\\\\\\\\\\\\\\\\\\\\\\______/\\\\\\\\\\\\\\\\\\\\\\___/\\\\\\_______________/\\\\\\\\\\\\\\\\\\\\\\\\___________/\\\\\\\\\\______        " +
-                    "\r\n _\\/\\\\\\////////\\\\\\___\\/////\\\\\\///___\\/\\\\\\______________\\/\\\\\\////////\\\\\\_______/\\\\\\///\\\\\\____       " +
-                    "\r\n  _\\/\\\\\\______\\//\\\\\\______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\______\\//\\\\\\____/\\\\\\/__\\///\\\\\\__      " +
-                    "\r\n   _\\/\\\\\\_______\\/\\\\\\______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\_______\\/\\\\\\___/\\\\\\______\\//\\\\\\_     " +
-                    "\r\n    _\\/\\\\\\_______\\/\\\\\\______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\_______\\/\\\\\\__\\/\\\\\\_______\\/\\\\\\_    " +
-                    "\r\n     _\\/\\\\\\_______\\/\\\\\\______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\_______\\/\\\\\\__\\//\\\\\\______/\\\\\\__   " +
-                    "\r\n      _\\/\\\\\\_______/\\\\\\_______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\_______/\\\\\\____\\///\\\\\\__/\\\\\\____  " +
-                    "\r\n       _\\/\\\\\\\\\\\\\\\\\\\\\\\\/_____/\\\\\\\\\\\\\\\\\\\\\\__\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\__\\/\\\\\\\\\\\\\\\\\\\\\\\\/_______\\///\\\\\\\\\\/_____ " +
-                    "\r\n        _\\////////////______\\///////////___\\///////////////___\\////////////___________\\/////_______");
+        Debug.NonAuthLog("<DYE>__/\\\\\\\\\\\\\\\\\\\\\\\\______/\\\\\\\\\\\\\\\\\\\\\\___/\\\\\\_______________/\\\\\\\\\\\\\\\\\\\\\\\\___________/\\\\\\\\\\______        " +
+                        "\r\n _\\/\\\\\\////////\\\\\\___\\/////\\\\\\///___\\/\\\\\\______________\\/\\\\\\////////\\\\\\_______/\\\\\\///\\\\\\____       " +
+                        "\r\n  _\\/\\\\\\______\\//\\\\\\______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\______\\//\\\\\\____/\\\\\\/__\\///\\\\\\__      " +
+                        "\r\n   _\\/\\\\\\_______\\/\\\\\\______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\_______\\/\\\\\\___/\\\\\\______\\//\\\\\\_     " +
+                        "\r\n    _\\/\\\\\\_______\\/\\\\\\______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\_______\\/\\\\\\__\\/\\\\\\_______\\/\\\\\\_    " +
+                        "\r\n     _\\/\\\\\\_______\\/\\\\\\______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\_______\\/\\\\\\__\\//\\\\\\______/\\\\\\__   " +
+                        "\r\n      _\\/\\\\\\_______/\\\\\\_______\\/\\\\\\______\\/\\\\\\______________\\/\\\\\\_______/\\\\\\____\\///\\\\\\__/\\\\\\____  " +
+                        "\r\n       _\\/\\\\\\\\\\\\\\\\\\\\\\\\/_____/\\\\\\\\\\\\\\\\\\\\\\__\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\__\\/\\\\\\\\\\\\\\\\\\\\\\\\/_______\\///\\\\\\\\\\/_____ " +
+                        "\r\n        _\\////////////______\\///////////___\\///////////////___\\////////////___________\\/////_______");
 
-        Debug.Log("<DGA>==========================================================================================================");
-        Debug.Log($"<GRA> Distributed Interface of Local Data Orchestration <DGA>(DILDO) <WHI>| <DYE>{VERSION}<YEL> {VERSION_NAME}");
-        Debug.Log("<DGA>==========================================================================================================\n");
+        Debug.NonAuthLog("<DGA>==========================================================================================================");
+        Debug.NonAuthLog($"<GRA> Distributed Interface of Local Data Orchestration <DGA>(DILDO) <WHI>| <DYE>{VERSION}<YEL> {VERSION_NAME}");
+        Debug.NonAuthLog("<DGA>==========================================================================================================\n");
     }
 
 }
