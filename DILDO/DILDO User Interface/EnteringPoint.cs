@@ -103,15 +103,19 @@ using DILDO.client.MVM.model;
 #if !UNITY_5_OR_NEWER
 public static class EnteringPoint
 {
-    private const string VERSION = "1.7.2b";
+    private const string VERSION = "1.7.2";
     private const string VERSION_NAME = "Sencha Tea Edition";
 
     [STAThread]
     public static int Main(string[] args)
     {
+        string? command = null;
+        ReadName();
+
         Init();
 
-        string? command = null;
+        string? name = command;
+
         while (command != "exit")
         {
             Read();
@@ -153,7 +157,7 @@ public static class EnteringPoint
             {
                 NetworkingInput.Init(new User()
                 {
-                    UserName = "DEV",
+                    UserName = name,
                     NetworkingMode = parts[1] == "s" ? NetworkingState.SERVER : NetworkingState.CLIENT
                 });
             }
@@ -229,6 +233,17 @@ public static class EnteringPoint
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(">> ");
             command = Console.ReadLine();
+        }
+        void ReadName()
+        {
+            Console.Write('\n');
+            while (command is null || command.Length == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write(">> Enter name: ");
+                command = Console.ReadLine();
+            }
+            Console.Write('\n');
         }
     }
 

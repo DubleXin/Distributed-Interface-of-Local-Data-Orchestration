@@ -9,7 +9,7 @@ using System.Net;
 
 namespace DILDO.server.controllers
 {
-    public class PacketHandler
+    public class PacketRouter
     {
         public int TickRate { get => _tickDelay * 1024; set => _tickDelay = 1024 / value; }
         private int _tickDelay;
@@ -44,7 +44,7 @@ namespace DILDO.server.controllers
 
         public bool BroadcastCredentials;
 
-        public PacketHandler(ServerModel model,
+        public PacketRouter(ServerModel model,
                             ServerState server)
         {
             _serverModel = model;
@@ -130,7 +130,6 @@ namespace DILDO.server.controllers
                 return;
             var endpoint = new IPEndPoint
             (IPAddress.Broadcast, _serverModel.ServerSendPort);
-            Debug.Log<PacketHandler>($"<MAG> Sending packet: <DMA>{_serverModel.ServerID}");
             _serverModel.Server.Send(sendingData, sendingData.Length, endpoint);
         }
 
@@ -150,8 +149,7 @@ namespace DILDO.server.controllers
             ReceivedPacketBuffer.TryGetValue(packet.ID, out var packetToInvoke);
             if (packet.Data is not null)
             {
-               Debug.Log<PacketHandler>("Invoking the receive action");
-               Debug.Log<PacketHandler>("The OnPacketReceived validation -> " +(StateProfile.OnPacketReceived is null));
+               Debug.Log<PacketRouter>("<CYA>The OnPacketReceived validation -> " +(StateProfile.OnPacketReceived is null));
                 _server.RaisePacketReceiver(packetToInvoke, "public void InvokePacketReceive(string data)");
             }
         }

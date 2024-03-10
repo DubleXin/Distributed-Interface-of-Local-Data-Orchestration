@@ -11,8 +11,8 @@ public class ServerState  : StateProfile, IDisposable
     public static ServerState? Instance { get; private set; }
 
     private ServerModel? _server;
-    private PacketHandler? _packetHandler;
-    public PacketHandler? @PacketHandler { get => _packetHandler; }
+    private PacketRouter? _packetRouter;
+    public PacketRouter? PacketRouter { get => _packetRouter; }
 
     private CancellationTokenSource _cts;
 
@@ -22,13 +22,13 @@ public class ServerState  : StateProfile, IDisposable
     {
         _cts = new();
         _server = new();
-        _packetHandler = new(_server, this);
+        _packetRouter = new(_server, this);
         Debug.Log<ServerState>($"<WHI> Server Started.");
         Task.Run(Process);
     }
     private void Process()
     {
-        _packetHandler.Broadcast();
+        _packetRouter.Broadcast();
 
         _server.Client.EnableBroadcast = true;
         Task.Run(() =>
@@ -41,7 +41,7 @@ public class ServerState  : StateProfile, IDisposable
                 {
                     byte[] buffer = _server.Client.Receive(ref endpoint);
                     string encoded = Encoding.UTF32.GetString(buffer);
-                    _packetHandler.InvokePacketReceive(encoded);
+                    _packetRouter.InvokePacketReceive(encoded);
                 }
                 catch { }
             }
@@ -49,8 +49,8 @@ public class ServerState  : StateProfile, IDisposable
             StateBroker.Instance.OnStateClosed?.Invoke();
         });
         while (!_cts.Token.IsCancellationRequested) { }
-        _packetHandler.BroadcastCancellationToken.Cancel();
-        _packetHandler.PacketHandlingCancellationToken.Cancel();
+        _packetRouter.BroadcastCancellationToken.Cancel();
+        _packetRouter.PacketHandlingCancellationToken.Cancel();
     }
     public override void Close() => _cts.Cancel();
     public void Dispose() => _server.Dispose();

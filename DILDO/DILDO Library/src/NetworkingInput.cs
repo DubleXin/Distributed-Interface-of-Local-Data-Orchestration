@@ -1,6 +1,7 @@
 ﻿using DILDO.client;
 using DILDO.client.MVM.model;
 using DILDO.server;
+using DILDO.server.controllers;
 
 namespace DILDO;
 
@@ -42,12 +43,18 @@ public static class NetworkingInput
 
     public static void SetBroadcastCredentials(bool state)
     {
-        if(StateBroker.Instance is not null)
+        if (StateBroker.Instance is not null)
             if (StateBroker.Instance.IsServer)
-                if (ServerState.Instance.PacketHandler is not null)
-                    ServerState.Instance.PacketHandler.BroadcastCredentials = state;
+                if (ServerState.Instance.PacketRouter is not null)
+                {
+                    if (state == ServerState.Instance.PacketRouter.BroadcastCredentials)
+                        return;
+
+                    ServerState.Instance.PacketRouter.BroadcastCredentials = state;
+                    Debug.Log<PacketRouter>($"<WHI> Server {(state? "started" : "stopped")} broadcasting credentials.");
+                }
                 else
-                    Debug.Exception("SetBroadcastCredentials(bool state) NullReferenceException", 
+                    Debug.Exception("SetBroadcastCredentials(bool state) NullReferenceException",
                         "ServerState.Instance.PacketHandler is null, No hints available");
             else
                 Debug.Exception("SetBroadcastCredentials(bool state) actively refuses",
@@ -85,9 +92,9 @@ public static class NetworkingInput
             if (StateBroker.Instance.IsServer)
                 if (ServerState.Instance is not null)
                 {
-                    if (ServerState.Instance.PacketHandler is not null)
+                    if (ServerState.Instance.PacketRouter is not null)
                     {
-                        ServerState.Instance.PacketHandler.TickRate = tickRate;
+                        ServerState.Instance.PacketRouter.TickRate = tickRate;
                     }
                     else
                         Debug.Exception("ConfigurateServer(...) NullReferenceException",
@@ -107,7 +114,7 @@ public static class NetworkingInput
     public static void Connect(int index)
     {
         var servers = GetAvailableServers();
-        if (servers is not null) 
+        if (servers is not null)
         {
             int i = -1;
             foreach (var server in servers)
@@ -117,7 +124,10 @@ public static class NetworkingInput
                     continue;
 
                 ClientState.Instance.ConnectToServer(server.guid);
-            } 
+                return;
+            }
+            Debug.Exception("Connect(int index) OutOfBoundsException",
+               "index was out of bounds");
         }
     }
 
