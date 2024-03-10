@@ -8,20 +8,25 @@ namespace DILDO
 
         public static void Log<From>(string message)
         {
+#if UNITY_5_OR_NEWER
+            UnityEngine.Debug.Log(message);
+#else
             Console.ForegroundColor = ConsoleColor.Green;
 
             string from = typeof(From).Name;
             string time = DateTime.Now.ToString();
 
             Console.Write($"{from}\t[{time}]:\t");
-
-            Console.ForegroundColor = DEFAULT;
-
             Log(message);
+#endif
         }
 
         public static void Log(string message)
         {
+#if UNITY_5_OR_NEWER
+            UnityEngine.Debug.Log(message);
+#else
+            Console.ForegroundColor = DEFAULT;
             bool buffer = false;
 
             for (int i = 0; i < message.Length; i++)
@@ -81,6 +86,7 @@ namespace DILDO
             }
             Console.Write("\n");
             Console.ForegroundColor = DEFAULT;
+#endif
         }
     }
 }

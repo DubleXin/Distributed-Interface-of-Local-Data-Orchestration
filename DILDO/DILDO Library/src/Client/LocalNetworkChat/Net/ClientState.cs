@@ -9,10 +9,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using ServerModel = DILDO.server.models.ServerModel;
+using DILDO.server;
 
 namespace DILDO.client;
-public class Client : NetProfile, IDisposable
+public class ClientState : StateProfile, IDisposable
 {
+    public static ClientState Instance { get; private set; }
+
     private UdpClient _sendClient;
     private UdpClient _receiveClient;
     public Action? OnUserConnectEvent;
@@ -23,22 +26,15 @@ public class Client : NetProfile, IDisposable
     private ConcurrentDictionary<Guid, Guid> _serverConnectInfo;
     private ConcurrentDictionary<Guid, UDPPacket> _receivedPackets;
 
-    private User _owner;
     private Guid _id;
 
     private CancellationTokenSource _cts;
 
-    public Client(User owner) : base()
+    public ClientState() : base()
     {
-        _owner = owner;
         _id = Guid.NewGuid();
 
-        _cts = new CancellationTokenSource();
-        _receiveClient = new UdpClient(ServerModel.DEFAULT_SERVER_SEND_PORT);
-        _sendClient = new UdpClient();
-        _serverNames = new ConcurrentDictionary<Guid, string>();
-        _receivedPackets = new();
-        _serverConnectInfo = new();
+        Instance = this;
     }
 
     public (Guid, string)[] GetServers()
@@ -52,12 +48,16 @@ public class Client : NetProfile, IDisposable
 
     public override void Launch()
     {
-        Debug.Log<Client>("Client Started <GRA>| <DYE>1.7.0a1<YEL> Networking Experience Requiem Edition\n");
-        Process();
-    }
+        _cts = new CancellationTokenSource();
+        _receiveClient = new UdpClient(ServerModel.DEFAULT_SERVER_SEND_PORT);
+        _sendClient = new UdpClient();
 
-    private void Process()
-    {
+        _serverNames = new ConcurrentDictionary<Guid, string>();
+        _receivedPackets = new();
+        _serverConnectInfo = new();
+
+        Debug.Log<ClientState>($"<CYA>User [{NetworkingData.This.UserName}]<WHI> Client Started.");
+
         ListenToConnection();
     }
 
@@ -69,30 +69,34 @@ public class Client : NetProfile, IDisposable
             var endpoint = new IPEndPoint(IPAddress.Any, 0);
             while(!_cts.IsCancellationRequested)
             {
-                byte[] message = _receiveClient.Receive(ref endpoint);
-                string encoded = Encoding.UTF32.GetString(message);
-
-                PacketReaderBroker reader = new(encoded);
-
-                var packet = new UDPPacket()
+                try
                 {
-                    ID = reader.GetID(PacketReaderBroker.DataType.PacketID),
-                    ConfirmID = reader.GetID(PacketReaderBroker.DataType.ConfirmID),
-                    OpCode = reader.GetOpCode(),
-                    Data = reader.GetPacketData(),
-                    RawData = reader.GetRawPacketData(),
-                };
+                    byte[] message = _receiveClient.Receive(ref endpoint);
+                    string encoded = Encoding.UTF32.GetString(message);
 
-                if (packet.RawData.Length < 4)
-                    continue;
+                    PacketReaderBroker reader = new(encoded);
 
-                TryAddPacketToList(packet);
-                TryAddServerToList(packet);
+                    var packet = new UDPPacket()
+                    {
+                        ID = reader.GetID(PacketReaderBroker.DataType.PacketID),
+                        ConfirmID = reader.GetID(PacketReaderBroker.DataType.ConfirmID),
+                        OpCode = reader.GetOpCode(),
+                        Data = reader.GetPacketData(),
+                        RawData = reader.GetRawPacketData(),
+                    };
+
+                    if (packet.RawData.Length < 4)
+                        continue;
+
+                    TryAddPacketToList(packet);
+                    TryAddServerToList(packet);
+                }
+                catch (Exception ex){ }
             }
+            _cts.Dispose();
+            Dispose();
         });
     }
-
-
     private void TryAddServerToList(UDPPacket packet)
     {
         var raw = packet.RawData;
@@ -106,7 +110,6 @@ public class Client : NetProfile, IDisposable
                 OnServerAddressFound?.Invoke(listToInvoke.ToArray());
             }
     }
-
     private void TryAddPacketToList(UDPPacket packet)
     {
         if (_receivedPackets.TryAdd(packet.ID, packet))
@@ -135,14 +138,22 @@ public class Client : NetProfile, IDisposable
         _sendClient.Send(sendingData, sendingData.Length, endpoint);
     }
 
-    public override void Close()
-    {
-           
+    public override void Close() 
+    { 
+        _cts.Cancel(); 
+        _receiveClient.Close(); 
     }
 
     public void Dispose()
     {
-            
+        Debug.Log<ServerState>($"<CYA>User [{NetworkingData.This.UserName}]<DRE> Closes client.");
+
+        _sendClient.Close();
+
+        _receiveClient.Dispose();
+        _sendClient.Dispose();
+
+        StateBroker.Instance.OnStateClosed?.Invoke();
     }
 }
 

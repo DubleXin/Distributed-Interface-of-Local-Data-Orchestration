@@ -1,9 +1,9 @@
 ﻿using DILDO.server.models;
 
 namespace DILDO;
-public abstract class NetProfile
+public abstract class StateProfile
 {
-    public NetProfile()
+    public StateProfile()
     {
         OnPacketReceived = ((packet) => { });
     }
@@ -13,7 +13,7 @@ public abstract class NetProfile
         if (OnPacketReceived != null)
             OnPacketReceived.Invoke(packet);
         else
-            Debug.Log<NetProfile>(callbackMessage);
+            Debug.Log<StateProfile>(callbackMessage);
 
     }
     public void SubscribeToPacketReceiver(Action<UDPPacket> action)

@@ -4,6 +4,6 @@
     {
         public string? UserName { get; set; }               = "NONAME";
         public string? UserId { get; set; }                 = "NONE";
-        public NetworkingMode NetworkingMode { get; set; }  = NetworkingMode.CLIENT;
+        public NetworkingState NetworkingMode { get; set; }  = NetworkingState.CLIENT;
     }
 }

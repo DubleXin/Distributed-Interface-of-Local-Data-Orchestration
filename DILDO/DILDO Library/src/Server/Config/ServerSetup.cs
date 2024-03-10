@@ -18,13 +18,20 @@ public class ServerSetup
         model.Client.EnableBroadcast = true;
         Task.Run(() =>
         {
+            Debug.Log<ServerState>($"<CYA>User [{NetworkingData.This.UserName}]<DRE> Starts listening.");
             var endpoint = new IPEndPoint(IPAddress.Any, 0);
             while (!model.CancellationToken.IsCancellationRequested)
             {
-                byte[] buffer = model.Client.Receive(ref endpoint);
-                string encoded = Encoding.UTF32.GetString(buffer);
-                handler.InvokePacketReceive(encoded);
+                try
+                {
+                    byte[] buffer = model.Client.Receive(ref endpoint);
+                    string encoded = Encoding.UTF32.GetString(buffer);
+                    handler.InvokePacketReceive(encoded);
+                }
+                catch (Exception ex) { }
             }
+            Debug.Log<ServerState>($"<CYA>User [{NetworkingData.This.UserName}]<DRE> Closes server.");
+            StateBroker.Instance.OnStateClosed?.Invoke();
         });
     }
 }

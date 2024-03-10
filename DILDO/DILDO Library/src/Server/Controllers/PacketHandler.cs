@@ -40,12 +40,10 @@ namespace DILDO.server.controllers
         private string _userName;
         private int _drinkID;
 
-        private readonly Server _server;
-        private readonly User _user;
+        private readonly ServerState _server;
 
-        public PacketHandler(ServerModel model, 
-            User user,
-            Server server)
+        public PacketHandler(ServerModel model,
+            ServerState server)
         {
             _serverModel = model;
             BroadcastCancellationToken = new();
@@ -55,7 +53,6 @@ namespace DILDO.server.controllers
             _packetAttempts = new();
 
             _server = server;
-            _user = user;
         }
 
         public void AddPacketToSendQueue(UDPPacket packet, int broadcastAttemts = 1)
@@ -79,6 +76,7 @@ namespace DILDO.server.controllers
                     SendMassagesFromBuffer();
                     TryRemoveSentPackets();
                 }
+                _server.Dispose();
             });
         }
 
@@ -147,7 +145,7 @@ namespace DILDO.server.controllers
             if (packet.Data is not null)
             {
                Debug.Log<PacketHandler>("Invoking the receive action");
-               Debug.Log<PacketHandler>("The OnPacketReceived validation -> " +(NetProfile.OnPacketReceived is null));
+               Debug.Log<PacketHandler>("The OnPacketReceived validation -> " +(StateProfile.OnPacketReceived is null));
                 _server.RaisePacketReceiver(packetToInvoke, "public void InvokePacketReceive(string data)");
             }
         }
