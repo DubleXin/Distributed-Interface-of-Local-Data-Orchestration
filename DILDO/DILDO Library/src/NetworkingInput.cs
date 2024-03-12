@@ -45,13 +45,13 @@ public static class NetworkingInput
     {
         if (StateBroker.Instance is not null)
             if (StateBroker.Instance.IsServer)
-                if (ServerState.Instance.PacketRouter is not null)
+                if (ServerState.Instance.PacketHandler is not null)
                 {
-                    if (state == ServerState.Instance.PacketRouter.BroadcastCredentials)
+                    if (state == ServerState.Instance.PacketHandler.BroadcastCredentials)
                         return;
 
-                    ServerState.Instance.PacketRouter.BroadcastCredentials = state;
-                    Debug.Log<PacketRouter>($"<WHI> Server {(state? "started" : "stopped")} broadcasting credentials.");
+                    ServerState.Instance.PacketHandler.BroadcastCredentials = state;
+                    Debug.Log<ServerPacketHandler>($"<WHI> Server {(state? "started" : "stopped")} broadcasting credentials.");
                 }
                 else
                     Debug.Exception("SetBroadcastCredentials(bool state) NullReferenceException",
@@ -92,9 +92,9 @@ public static class NetworkingInput
             if (StateBroker.Instance.IsServer)
                 if (ServerState.Instance is not null)
                 {
-                    if (ServerState.Instance.PacketRouter is not null)
+                    if (ServerState.Instance.PacketHandler is not null)
                     {
-                        ServerState.Instance.PacketRouter.TickRate = tickRate;
+                        ServerState.Instance.PacketHandler._tickRate = tickRate;
                     }
                     else
                         Debug.Exception("ConfigurateServer(...) NullReferenceException",

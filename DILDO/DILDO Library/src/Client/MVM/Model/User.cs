@@ -2,8 +2,8 @@
 {
     public class User
     {
-        public string? UserName { get; set; }               = "NONAME";
-        public string? UserId { get; set; }                 = "NONE";
-        public NetworkingState NetworkingMode { get; set; }  = NetworkingState.CLIENT;
+        public string? UserName         { get; set; } = "NONAME";
+        public Guid? UserId             { get; set; } = Guid.NewGuid();
+        public NetworkingState State    { get; set; } = NetworkingState.CLIENT;
     }
 }

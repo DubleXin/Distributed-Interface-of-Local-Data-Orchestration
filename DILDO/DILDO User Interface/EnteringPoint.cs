@@ -158,7 +158,7 @@ public static class EnteringPoint
                 NetworkingInput.Init(new User()
                 {
                     UserName = name,
-                    NetworkingMode = parts[1] == "s" ? NetworkingState.SERVER : NetworkingState.CLIENT
+                    State = parts[1] == "s" ? NetworkingState.SERVER : NetworkingState.CLIENT
                 });
             }
 

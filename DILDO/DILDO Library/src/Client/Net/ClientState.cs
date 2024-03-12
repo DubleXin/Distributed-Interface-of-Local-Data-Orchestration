@@ -1,7 +1,7 @@
 ﻿using DILDO.server.models;
 using DILDO.net.IO;
 using DILDO.server.core.factories;
-using static DILDO.server.controllers.PacketRouter;
+using static DILDO.server.controllers.ServerPacketHandler;
 
 using System.Net;
 using System.Text;

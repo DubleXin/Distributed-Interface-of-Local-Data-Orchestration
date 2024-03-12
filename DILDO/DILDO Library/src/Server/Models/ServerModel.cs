@@ -13,19 +13,20 @@ namespace DILDO.server.models
         /// To get it without reference of the CLient you can use 
         /// "ServerReceivePort" property.
         /// </summary>
-        public UdpClient Client { get; set; }
+        public UdpClient Client { get; private set; }
         /// <summary>
         /// UDP sending point. So it doesn't have asociated port. 
         /// Use the "ServerSendPort".
         /// </summary>
-        public UdpClient Server { get; set; }
+        public UdpClient Server { get; private set; }
 
         private bool _isDisposed;
 
         public ushort ServerReceivePort { get; private set; }
         public ushort ServerSendPort { get; private set; }
-        public ConcurrentDictionary<Guid, string> Users { get; set; }
-        public ReaderWriterLockSlim ListenerLock { get; set; }
+
+        public ConcurrentDictionary<Guid, string> Users { get; private set; }
+        public ReaderWriterLockSlim ListenerLock { get; private set; }
         public CancellationTokenSource CancellationToken { get; private set; }
 
         public ServerModel(
@@ -44,11 +45,7 @@ namespace DILDO.server.models
             Server = new();
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
+        public void Dispose() => Dispose(true);
         protected virtual void Dispose(bool disposing)
         {
             if (!_isDisposed)

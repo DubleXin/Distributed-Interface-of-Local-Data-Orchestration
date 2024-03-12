@@ -30,7 +30,7 @@ public class StateBroker
         MaxQueuedStates = 8;
         _queuedStateChanges = new(MaxQueuedStates);
 
-        SwitchMode(NetworkingData.This.NetworkingMode);
+        SwitchMode(NetworkingData.This.State);
     }
     public void SwitchMode(NetworkingState mode)
     {
@@ -54,7 +54,7 @@ public class StateBroker
             CurrentProfile = next;
             CurrentProfile.Launch();
 
-            NetworkingData.This.NetworkingMode = mode;
+            NetworkingData.This.State = mode;
 
             OnStateClosed = null;
 
