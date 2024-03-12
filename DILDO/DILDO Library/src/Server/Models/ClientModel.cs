@@ -3,10 +3,10 @@ using System.Net.Sockets;
 
 namespace DILDO.server.models
 {
-    public class ClientModel
+    public class ClientModel : IDisposable
     {
         public UdpClient SendClient { get; set; }
-        public UdpClient ReceiveCLient { get; set; }
+        public UdpClient ReceiveClient { get; set; }
 
         public Action? OnUserConnectEvent;
         public Action? OnUserDisconnectEvent;
@@ -22,16 +22,33 @@ namespace DILDO.server.models
 
         public ClientModel()
         {
-            SendClient = new();
-            ReceiveCLient = new();
+            SendClient = new UdpClient();
+            ReceiveClient = new UdpClient();
 
-            ServerNames = new();
-            ServerConnectInfo = new();
-            ReceivedPackets = new();
+            ServerNames = new ConcurrentDictionary<Guid, string>();
+            ServerConnectInfo = new ConcurrentDictionary<Guid, Guid>();
+            ReceivedPackets = new ConcurrentDictionary<Guid, UDPPacket>();
 
             ID = Guid.NewGuid();
 
-            CancellationToken = new();
+            CancellationToken = new CancellationTokenSource();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                SendClient?.Dispose();
+                ReceiveClient?.Dispose();
+                CancellationToken?.Cancel();
+                CancellationToken?.Dispose();
+            }
         }
     }
 }

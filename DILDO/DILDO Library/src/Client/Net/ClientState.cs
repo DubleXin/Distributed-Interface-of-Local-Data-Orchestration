@@ -13,6 +13,10 @@ public class ClientState : StateProfile, IDisposable
 {
     public static ClientState? Instance { get; private set; }
 
+    public Action? OnUserConnectEvent { get => _model.OnUserConnectEvent; }
+    public Action? OnUserDisconnectEvent { get => _model.OnUserDisconnectEvent; }
+    public Action<(Guid, string)[]>? OnServerAddressFound { get => _model.OnServerAddressFound; }
+
     private ClientModel _model;
 
     public ClientState() : base()
@@ -39,7 +43,7 @@ public class ClientState : StateProfile, IDisposable
 
     private void ListenToConnection()
     {
-        _model.ReceiveCLient.EnableBroadcast = true;
+        _model.ReceiveClient.EnableBroadcast = true;
         Task.Run(() =>
         {
             var endpoint = new IPEndPoint(IPAddress.Any, 0);
@@ -47,7 +51,7 @@ public class ClientState : StateProfile, IDisposable
             {
                 try
                 {
-                    byte[] message = _model.ReceiveCLient.Receive(ref endpoint);
+                    byte[] message = _model.ReceiveClient.Receive(ref endpoint);
                     string encoded = Encoding.UTF32.GetString(message);
 
                     PacketReaderBroker reader = new(encoded);
@@ -118,19 +122,14 @@ public class ClientState : StateProfile, IDisposable
     public override void Close() 
     { 
         _model.CancellationToken.Cancel(); 
-        _model.ReceiveCLient.Close(); 
+        _model.ReceiveClient.Close(); 
     }
 
     public void Dispose()
     {
-        _model.SendClient.Close();
-
-        _model.ReceiveCLient.Dispose();
-        _model.SendClient.Dispose();
+        _model.Dispose();
 
         Debug.Log<ClientState>("<DRE> Client Closed and Disposed.");
         StateBroker.Instance.OnStateClosed?.Invoke();
     }
-
 }
-
