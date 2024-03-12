@@ -1,8 +1,11 @@
-﻿using DILDO.server.models;
+﻿using DILDO.controllers;
+using DILDO.server.models;
 
 namespace DILDO;
 public abstract class StateProfile
 {
+    public abstract PacketHandler? PacketHandler { get; protected set; }
+
     public StateProfile()
     {
         OnPacketReceived = ((packet) => { });

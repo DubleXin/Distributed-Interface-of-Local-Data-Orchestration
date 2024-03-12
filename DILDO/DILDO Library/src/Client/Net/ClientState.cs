@@ -7,11 +7,20 @@ using System.Net;
 using System.Text;
 
 using ServerModel = DILDO.server.models.ServerModel;
+using DILDO.controllers;
+using DILDO.server.controllers;
 namespace DILDO.client;
 
 public class ClientState : StateProfile, IDisposable
 {
     public static ClientState? Instance { get; private set; }
+
+    public override PacketHandler? PacketHandler
+    {
+        get => _packetHandler;
+        protected set => _packetHandler = value as ServerPacketHandler;
+    }
+    private ServerPacketHandler? _packetHandler; //TODO CLIENT
 
     public ClientModel Model { get; private set; }
 
@@ -99,7 +108,7 @@ public class ClientState : StateProfile, IDisposable
                 (OpCode.BroadcastStringMessage).GetPacket(new string[]
                 {
                     Guid.NewGuid().ToString(),
-                    ((int)PacketType.SessionConfirm).ToString(),
+                    ((int)PacketHandler.PacketType.SessionConfirm).ToString(),
                     guid.ToString(),
                     info.ToString(),
                     Model.ID.ToString(),

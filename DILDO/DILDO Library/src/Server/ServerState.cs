@@ -1,16 +1,21 @@
-﻿using DILDO.server.controllers;
+﻿using DILDO.controllers;
+using DILDO.server.controllers;
 using ServerModel = DILDO.server.models.ServerModel;
 
 namespace DILDO.server;
-public class ServerState  : StateProfile, IDisposable
+public class ServerState : StateProfile, IDisposable
 {
     public static ServerState? Instance { get; private set; }
 
     private ServerModel? _model;
     public ServerModel? Model { get => _model; }
 
+    public override PacketHandler? PacketHandler 
+    { 
+        get => _packetHandler; 
+        protected set => _packetHandler = value as ServerPacketHandler; 
+    }
     private ServerPacketHandler? _packetHandler;
-    public ServerPacketHandler? PacketHandler { get => _packetHandler; }
 
     private CancellationTokenSource? _cts;
 
@@ -38,9 +43,6 @@ public class ServerState  : StateProfile, IDisposable
         });
 
         while (!_cts.Token.IsCancellationRequested) { }
-
-        _packetHandler.StopPairing();
-        _packetHandler.StopCommunication();
         _packetHandler.LifeCycleCTS.Cancel();
     }
 
