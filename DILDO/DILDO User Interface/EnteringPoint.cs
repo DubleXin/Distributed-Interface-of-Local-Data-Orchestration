@@ -169,7 +169,7 @@ public static class EnteringPoint
 
             else if (parts.Length == 2 && parts[0] == "visible")
             {
-                NetworkingInput.SetBroadcastCredentials(parts[1] == "true");
+                NetworkingInput.SetPairing(parts[1] == "true");
             }
 
             else if (parts.Length == 2 && parts[0] == "draw")

@@ -41,26 +41,22 @@ public static class NetworkingInput
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
 
-    public static void SetBroadcastCredentials(bool state)
+    public static void SetPairing(bool state)
     {
         if (StateBroker.Instance is not null)
-            if (StateBroker.Instance.IsServer)
-                if (ServerState.Instance.PacketHandler is not null)
-                {
-                    if (state == ServerState.Instance.PacketHandler.BroadcastCredentials)
-                        return;
+            if (StateBroker.Instance.CurrentProfile.PacketHandler is not null)
+            {
+                if (state == ServerState.Instance.PacketHandler.IsPairing)
+                    return;
 
-                    ServerState.Instance.PacketHandler.BroadcastCredentials = state;
-                    Debug.Log<ServerPacketHandler>($"<WHI> Server {(state? "started" : "stopped")} broadcasting credentials.");
-                }
-                else
-                    Debug.Exception("SetBroadcastCredentials(bool state) NullReferenceException",
-                        "ServerState.Instance.PacketHandler is null, No hints available");
+                ServerState.Instance.PacketHandler.IsPairing = state;
+                Debug.Log<ServerPacketHandler>($"<WHI> {(StateBroker.Instance.IsServer? "Server" : "Client")} {(state? "started" : "stopped")} pairing.");
+            }
             else
-                Debug.Exception("SetBroadcastCredentials(bool state) actively refuses",
-                    "Current networking state is not suitable, switch to \"Server\"");
+                Debug.Exception("SetPairing(bool state) NullReferenceException",
+                    "StateBroker.Instance.CurrentProfile.PacketHandler is null, No hints available");
         else
-            Debug.Exception("SetBroadcastCredentials(bool state) NullReferenceException",
+            Debug.Exception("SetPairing(bool state) NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
 
@@ -86,7 +82,7 @@ public static class NetworkingInput
         return null;
     }
 
-    public static void ConfigurateServer(int tickRate = 32)
+    public static void ConfigurateServer(int tickRate = 64)
     {
         if (StateBroker.Instance is not null)
             if (StateBroker.Instance.IsServer)
@@ -94,7 +90,7 @@ public static class NetworkingInput
                 {
                     if (ServerState.Instance.PacketHandler is not null)
                     {
-                        ServerState.Instance.PacketHandler._tickRate = tickRate;
+                        ServerState.Instance.PacketHandler.SetConfig(tickRate);
                     }
                     else
                         Debug.Exception("ConfigurateServer(...) NullReferenceException",
