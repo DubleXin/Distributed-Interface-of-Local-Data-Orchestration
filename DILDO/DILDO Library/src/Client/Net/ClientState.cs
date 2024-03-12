@@ -13,21 +13,17 @@ public class ClientState : StateProfile, IDisposable
 {
     public static ClientState? Instance { get; private set; }
 
-    public Action? OnUserConnectEvent { get => _model.OnUserConnectEvent; }
-    public Action? OnUserDisconnectEvent { get => _model.OnUserDisconnectEvent; }
-    public Action<(Guid, string)[]>? OnServerAddressFound { get => _model.OnServerAddressFound; }
-
-    private ClientModel _model;
+    public ClientModel Model { get; private set; }
 
     public ClientState() : base()
     {
-        _model = new();
+        Model = new();
         Instance = this;
     }
 
     public (Guid, string)[] GetServers()
     {
-        var servers = _model.ServerNames.ToArray();
+        var servers = Model.ServerNames.ToArray();
         List<(Guid, string)> listToInvoke = new();
         foreach (var server in servers)
             listToInvoke.Add((server.Key, server.Value));
@@ -43,15 +39,15 @@ public class ClientState : StateProfile, IDisposable
 
     private void ListenToConnection()
     {
-        _model.ReceiveClient.EnableBroadcast = true;
+        Model.ReceiveClient.EnableBroadcast = true;
         Task.Run(() =>
         {
             var endpoint = new IPEndPoint(IPAddress.Any, 0);
-            while(!_model.CancellationToken.IsCancellationRequested)
+            while(!Model.CancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    byte[] message = _model.ReceiveClient.Receive(ref endpoint);
+                    byte[] message = Model.ReceiveClient.Receive(ref endpoint);
                     string encoded = Encoding.UTF32.GetString(message);
 
                     PacketReaderBroker reader = new(encoded);
@@ -73,7 +69,7 @@ public class ClientState : StateProfile, IDisposable
                 }
                 catch { }
             }
-            _model.CancellationToken.Dispose();
+            Model.CancellationToken.Dispose();
             Dispose();
         });
     }
@@ -81,23 +77,23 @@ public class ClientState : StateProfile, IDisposable
     {
         var raw = packet.RawData;
         if (Guid.TryParse(raw[2], out var guid))
-            if (_model.ServerNames.TryAdd(guid, raw[3]) && _model.ServerConnectInfo.TryAdd(guid, packet.ConfirmID))
+            if (Model.ServerNames.TryAdd(guid, raw[3]) && Model.ServerConnectInfo.TryAdd(guid, packet.ConfirmID))
             {
-                var servers = _model.ServerNames.ToArray();
+                var servers = Model.ServerNames.ToArray();
                 List<(Guid, string)> listToInvoke = new();
                 foreach (var server in servers)
                     listToInvoke.Add((server.Key, server.Value));
-                _model.OnServerAddressFound?.Invoke(listToInvoke.ToArray());
+                Model.OnServerAddressFound?.Invoke(listToInvoke.ToArray());
             }
     }
     private void TryAddPacketToList(UDPPacket packet)
     {
-        if (_model.ReceivedPackets.TryAdd(packet.ID, packet))
+        if (Model.ReceivedPackets.TryAdd(packet.ID, packet))
             RaisePacketReceiver(packet, "private void TryAddPacketToList(UDPPacket packet)");
     }
     public void ConnectToServer(Guid guid)
     {
-        if(!_model.ServerConnectInfo.TryGetValue(guid, out var info))
+        if(!Model.ServerConnectInfo.TryGetValue(guid, out var info))
             return;
         var sendingData = PacketFactory.GetFactory
                 (OpCode.BroadcastStringMessage).GetPacket(new string[]
@@ -106,7 +102,7 @@ public class ClientState : StateProfile, IDisposable
                     ((int)PacketType.SessionConfirm).ToString(),
                     guid.ToString(),
                     info.ToString(),
-                    _model.ID.ToString(),
+                    Model.ID.ToString(),
                     Guid.NewGuid().ToString()
                 }).Data;
 
@@ -115,19 +111,19 @@ public class ClientState : StateProfile, IDisposable
 
         var endpoint = new IPEndPoint
         (IPAddress.Broadcast, ServerModel.DEFAULT_SERVER_RECEIVE_PORT);
-        _model.SendClient.Send(sendingData, sendingData.Length, endpoint);
-        Debug.Log<ClientState>($"<DMA> Requesting connection to server named: <MAG>{_model.ServerNames[guid]}");
+        Model.SendClient.Send(sendingData, sendingData.Length, endpoint);
+        Debug.Log<ClientState>($"<DMA> Requesting connection to server named: <MAG>{Model.ServerNames[guid]}");
     }
 
     public override void Close() 
-    { 
-        _model.CancellationToken.Cancel(); 
-        _model.ReceiveClient.Close(); 
+    {
+        Model.CancellationToken.Cancel();
+        Model.ReceiveClient.Close(); 
     }
 
     public void Dispose()
     {
-        _model.Dispose();
+        Model.Dispose();
 
         Debug.Log<ClientState>("<DRE> Client Closed and Disposed.");
         StateBroker.Instance.OnStateClosed?.Invoke();

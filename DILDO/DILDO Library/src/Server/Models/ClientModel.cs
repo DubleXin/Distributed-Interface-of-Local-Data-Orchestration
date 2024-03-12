@@ -5,20 +5,20 @@ namespace DILDO.server.models
 {
     public class ClientModel : IDisposable
     {
-        public UdpClient SendClient { get; set; }
-        public UdpClient ReceiveClient { get; set; }
+        public UdpClient SendClient { get; private set; }
+        public UdpClient ReceiveClient { get; private set; }
 
         public Action? OnUserConnectEvent;
         public Action? OnUserDisconnectEvent;
         public Action<(Guid, string)[]>? OnServerAddressFound;
 
-        public ConcurrentDictionary<Guid, string>? ServerNames { get; set; }
-        public ConcurrentDictionary<Guid, Guid>? ServerConnectInfo { get; set; }
-        public ConcurrentDictionary<Guid, UDPPacket>? ReceivedPackets { get; set; }
+        public ConcurrentDictionary<Guid, string>? ServerNames { get; private set; }
+        public ConcurrentDictionary<Guid, Guid>? ServerConnectInfo { get; private set; }
+        public ConcurrentDictionary<Guid, UDPPacket>? ReceivedPackets { get; private set; }
 
-        public Guid ID { get; set; }
+        public Guid ID { get; private set; }
 
-        public CancellationTokenSource CancellationToken { get; set; }
+        public CancellationTokenSource CancellationToken { get; private set; }
 
         public ClientModel()
         {
