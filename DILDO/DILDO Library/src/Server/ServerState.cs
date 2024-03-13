@@ -1,5 +1,6 @@
 ﻿using DILDO.controllers;
 using DILDO.server.controllers;
+using System.Net.Sockets;
 using ServerModel = DILDO.server.models.ServerModel;
 
 namespace DILDO.server;
@@ -46,6 +47,11 @@ public class ServerState : StateProfile
         Model.Server.Close();
 
         PacketHandler.LifeCycleCTS.Cancel();
+    }
+
+    public void ValidateConnection(TcpClient client)
+    {
+
     }
 
     #endregion

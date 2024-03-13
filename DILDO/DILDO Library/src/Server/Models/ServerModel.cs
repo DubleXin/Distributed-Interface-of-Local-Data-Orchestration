@@ -41,9 +41,10 @@ namespace DILDO.server.models
             if (_isDisposed)
                 return;
 
+            Listener?.Stop();
+
             Server.Dispose();
             Client.Dispose();
-            Listener?.Stop();
 
             _isDisposed = true;
 

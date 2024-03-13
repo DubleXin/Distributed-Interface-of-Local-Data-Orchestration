@@ -15,6 +15,8 @@ namespace DILDO.server.controllers
         private readonly IPAddress? _IPv4;
         private readonly IPAddress? _IPv6;
 
+        private CancellationTokenSource _acceptCts;
+
         public ServerPacketHandler() : base() 
         {
             _credentialsPacketID = Guid.NewGuid();
@@ -38,6 +40,7 @@ namespace DILDO.server.controllers
         {
             ServerState.Instance.Model.Listener = new(IPAddress.Any, ServerModel.DEFAULT_SERVER_LISTEN_PORT);
             Debug.Log<ServerModel>($" <WHI>Servers's <YEL>Listener <DGE>started at port {((IPEndPoint)ServerState.Instance.Model.Listener.LocalEndpoint).Port.ToString()}.");
+            Task.Run(AcceptConnection);
             base.StartPairing();
         }
         public override void StopPairing()
@@ -73,6 +76,21 @@ namespace DILDO.server.controllers
 
             var endpoint = new IPEndPoint(IPAddress.Broadcast, ServerModel.DEFAULT_SERVER_SEND_PORT);
             ServerState.Instance.Model.Server.Send(sendingData, sendingData.Length, endpoint);
+        }
+        private void AcceptConnection()
+        {
+            while (_acceptCts.IsCancellationRequested)
+            {
+                try
+                {
+                    var client = ServerState.Instance.Model.Listener.AcceptTcpClient();
+                    Task.Run(() => ServerState.Instance.ValidateConnection(client));
+                }
+                catch(Exception ex)
+                {
+                    Debug.Exception(ex.Message, "no additional explanations.");
+                }
+            }
         }
         protected override void Communication()
         {
