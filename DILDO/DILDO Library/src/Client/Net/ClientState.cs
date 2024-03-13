@@ -56,8 +56,10 @@ public class ClientState : StateProfile
     {
         var servers = Model.Servers.ToArray();
         List<(Guid, string)> listToInvoke = new();
+        
         foreach (var server in servers)
             listToInvoke.Add((server.Key, server.Value.ServerName));
+
         return listToInvoke.ToArray();
     }
 
@@ -71,6 +73,10 @@ public class ClientState : StateProfile
             $"{(serverData.V4 is null ? "" : $"IPv4 : {serverData.V4}")} , " +
             $"{(serverData.V6 is null ? "" : $"IPv6 : {serverData.V6}")}");
 
+        if(serverData.V4 is not null)
+            Model.TcpClient.Connect(serverData.V4.Address, serverData.V4.Port);
+        else if(serverData.V6 is not null)
+            Model.TcpClient.Connect(serverData.V6.Address, serverData.V6.Port);
 
     }
     
