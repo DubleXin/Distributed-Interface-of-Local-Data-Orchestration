@@ -14,7 +14,6 @@ namespace DILDO.server.models
 
         public ConcurrentDictionary<Guid, string>? ServerNames { get; private set; }
         public ConcurrentDictionary<Guid, Guid>? ServerConnectInfo { get; private set; }
-        public ConcurrentDictionary<Guid, UDPPacket>? ReceivedPackets { get; private set; }
 
         public Guid ID { get; private set; }
 
@@ -27,7 +26,6 @@ namespace DILDO.server.models
 
             ServerNames = new ConcurrentDictionary<Guid, string>();
             ServerConnectInfo = new ConcurrentDictionary<Guid, Guid>();
-            ReceivedPackets = new ConcurrentDictionary<Guid, UDPPacket>();
 
             ID = Guid.NewGuid();
 

@@ -1,14 +1,12 @@
 ﻿using DILDO.server.models;
 using DILDO.net.IO;
 using DILDO.server.core.factories;
-using static DILDO.server.controllers.ServerPacketHandler;
 
 using System.Net;
-using System.Text;
 
 using ServerModel = DILDO.server.models.ServerModel;
 using DILDO.controllers;
-using DILDO.server.controllers;
+using Client.Controllers;
 namespace DILDO.client;
 
 public class ClientState : StateProfile, IDisposable
@@ -18,9 +16,9 @@ public class ClientState : StateProfile, IDisposable
     public override PacketHandler? PacketHandler
     {
         get => _packetHandler;
-        protected set => _packetHandler = value as ServerPacketHandler;
+        protected set => _packetHandler = value as ClientPacketHandler;
     }
-    private ServerPacketHandler? _packetHandler; //TODO CLIENT
+    private ClientPacketHandler? _packetHandler;
 
     public ClientModel Model { get; private set; }
 
@@ -42,64 +40,8 @@ public class ClientState : StateProfile, IDisposable
     public override void Launch()
     {
         Debug.Log<ClientState>($"<WHI> Client Started.");
-
-        ListenToConnection();
     }
-
-    private void ListenToConnection()
-    {
-        Model.ReceiveClient.EnableBroadcast = true;
-        Task.Run(() =>
-        {
-            var endpoint = new IPEndPoint(IPAddress.Any, 0);
-            while(!Model.CancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    byte[] message = Model.ReceiveClient.Receive(ref endpoint);
-                    string encoded = Encoding.UTF32.GetString(message);
-
-                    PacketReaderBroker reader = new(encoded);
-
-                    var packet = new UDPPacket()
-                    {
-                        ID = reader.GetID(PacketReaderBroker.DataType.PacketID),
-                        ConfirmID = reader.GetID(PacketReaderBroker.DataType.ConfirmID),
-                        OpCode = reader.GetOpCode(),
-                        Data = reader.GetPacketData(),
-                        RawData = reader.GetRawPacketData(),
-                    };
-
-                    if (packet.RawData.Length < 4)
-                        continue;
-
-                    TryAddPacketToList(packet);
-                    TryAddServerToList(packet);
-                }
-                catch { }
-            }
-            Model.CancellationToken.Dispose();
-            Dispose();
-        });
-    }
-    private void TryAddServerToList(UDPPacket packet)
-    {
-        var raw = packet.RawData;
-        if (Guid.TryParse(raw[2], out var guid))
-            if (Model.ServerNames.TryAdd(guid, raw[3]) && Model.ServerConnectInfo.TryAdd(guid, packet.ConfirmID))
-            {
-                var servers = Model.ServerNames.ToArray();
-                List<(Guid, string)> listToInvoke = new();
-                foreach (var server in servers)
-                    listToInvoke.Add((server.Key, server.Value));
-                Model.OnServerAddressFound?.Invoke(listToInvoke.ToArray());
-            }
-    }
-    private void TryAddPacketToList(UDPPacket packet)
-    {
-        if (Model.ReceivedPackets.TryAdd(packet.ID, packet))
-            RaisePacketReceiver(packet, "private void TryAddPacketToList(UDPPacket packet)");
-    }
+    //TODO adapt to tcp
     public void ConnectToServer(Guid guid)
     {
         if(!Model.ServerConnectInfo.TryGetValue(guid, out var info))

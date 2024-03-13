@@ -26,7 +26,6 @@ namespace DILDO.server.models
         public ushort ServerSendPort { get; private set; }
 
         public ConcurrentDictionary<Guid, string> Users { get; private set; }
-        public ReaderWriterLockSlim ListenerLock { get; private set; }
         public CancellationTokenSource CancellationToken { get; private set; }
 
         public ServerModel(
@@ -38,7 +37,6 @@ namespace DILDO.server.models
             ServerReceivePort = receivePort;
             ServerSendPort = sendPort;
             Users = new();
-            ListenerLock = new();
             CancellationToken = new CancellationTokenSource();
 
             Client = new(receivePort);
