@@ -5,8 +5,10 @@ namespace DILDO.server.models
 {
     public class ServerModel : IDisposable
     {
+        public const ushort DEFAULT_SERVER_LISTEN_PORT = 8085;
         public const ushort DEFAULT_SERVER_RECEIVE_PORT = 8080;
         public const ushort DEFAULT_SERVER_SEND_PORT = 8000;
+
         public readonly Guid ServerID;
         /// <summary>
         /// UDP receiveng point. It has asociated port.
@@ -19,9 +21,7 @@ namespace DILDO.server.models
         /// Use the "ServerSendPort".
         /// </summary>
         public UdpClient Server { get; private set; }
-
-        public ushort ServerReceivePort { get; private set; }
-        public ushort ServerSendPort { get; private set; }
+        public TcpListener Listener { get; set; }
 
         public ConcurrentDictionary<Guid, string> Users { get; private set; }
 
@@ -30,8 +30,6 @@ namespace DILDO.server.models
         public ServerModel()
         {
             ServerID = Guid.NewGuid();
-            ServerReceivePort = DEFAULT_SERVER_RECEIVE_PORT;
-            ServerSendPort = DEFAULT_SERVER_SEND_PORT;
             Users = new();
 
             Client = new(DEFAULT_SERVER_RECEIVE_PORT);
@@ -45,6 +43,7 @@ namespace DILDO.server.models
 
             Server.Dispose();
             Client.Dispose();
+            Listener?.Stop();
 
             _isDisposed = true;
 

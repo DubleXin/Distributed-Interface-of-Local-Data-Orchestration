@@ -49,7 +49,11 @@ public static class NetworkingInput
                 if (state == StateBroker.Instance.CurrentProfile.PacketHandler.IsPairing)
                     return;
 
-                StateBroker.Instance.CurrentProfile.PacketHandler.IsPairing = state;
+                if(state)
+                    StateBroker.Instance.CurrentProfile.PacketHandler.StartPairing();
+                else
+                    StateBroker.Instance.CurrentProfile.PacketHandler.StopPairing();
+
                 Debug.Log<StateBroker>($"<WHI> {(StateBroker.Instance.IsServer? "Server" : "Client")} {(state? "started" : "stopped")} pairing.");
             }
             else

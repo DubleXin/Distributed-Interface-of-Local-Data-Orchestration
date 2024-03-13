@@ -61,7 +61,6 @@ public class ClientState : StateProfile
         return listToInvoke.ToArray();
     }
 
-    //TODO adapt to tcp
     public void ConnectToServer(Guid guid)
     {
         Debug.Log<ClientState>($"<DMA> Requesting connection to server named: <CYA>{Model.Servers[guid].ServerName}");
@@ -71,6 +70,8 @@ public class ClientState : StateProfile
         Debug.Log<ClientState>($"<YEL>  " +
             $"{(serverData.V4 is null ? "" : $"IPv4 : {serverData.V4}")} , " +
             $"{(serverData.V6 is null ? "" : $"IPv6 : {serverData.V6}")}");
+
+
     }
     
     #endregion

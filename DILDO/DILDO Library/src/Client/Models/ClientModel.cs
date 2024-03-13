@@ -5,6 +5,8 @@ namespace DILDO.client.models
 {
     public class ClientModel : IDisposable
     {
+        public TcpClient TcpClient { get; set; }
+
         public UdpClient SendClient { get; private set; }
         public UdpClient ReceiveClient { get; private set; }
 
@@ -36,6 +38,8 @@ namespace DILDO.client.models
         {
             if (_isDisposed)
                 return;
+
+            TcpClient?.Dispose();
 
             SendClient.Dispose();
             ReceiveClient.Dispose();

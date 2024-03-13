@@ -3,6 +3,7 @@ using DILDO.server.core.factories;
 using DILDO.controllers;
 
 using System.Net;
+using System.Net.Sockets;
 
 namespace DILDO.server.controllers
 {
@@ -14,8 +15,6 @@ namespace DILDO.server.controllers
         private readonly IPAddress? _IPv4;
         private readonly IPAddress? _IPv6;
 
-        private readonly ushort _port;
-
         public ServerPacketHandler() : base() 
         {
             _credentialsPacketID = Guid.NewGuid();
@@ -24,16 +23,28 @@ namespace DILDO.server.controllers
             IPAddress[] addresses = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
             foreach (var address in addresses)
             {
-                if (_IPv6 is null && address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                if (_IPv6 is null && address.AddressFamily == AddressFamily.InterNetworkV6)
                     _IPv6 = address;
 
-                if (_IPv4 is null && address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                if (_IPv4 is null && address.AddressFamily == AddressFamily.InterNetwork)
                     _IPv4 = address;
 
                 if (_IPv4 is not null && _IPv6 is not null)
                     break;
             }
-            _port = 47000;
+        }
+
+        public override void StartPairing()
+        {
+            ServerState.Instance.Model.Listener = new(IPAddress.Any, ServerModel.DEFAULT_SERVER_LISTEN_PORT);
+            Debug.Log<ServerModel>($" <WHI>Servers's <YEL>Listener <DGE>started at port {((IPEndPoint)ServerState.Instance.Model.Listener.LocalEndpoint).Port.ToString()}.");
+            base.StartPairing();
+        }
+        public override void StopPairing()
+        {
+            ServerState.Instance.Model.Listener.Stop();
+            Debug.Log<ServerModel>($" <WHI>Servers's <YEL>Listener <DGE>closed.");
+            base.StartPairing();
         }
 
         protected override void LifeCycle()
@@ -51,16 +62,16 @@ namespace DILDO.server.controllers
                        ((int)PacketType.BROADCAST_CREDENTIALS).ToString(),
                        ServerState.Instance.Model.ServerID.ToString(),
                        NetworkingData.This.UserName,
-                       (_IPv4 is not null? _IPv4.ToString() : ""),
-                       (_IPv6 is not null? _IPv6.ToString() : ""),
-                       _port.ToString(),
+                       _IPv4 is not null? _IPv4.ToString() : "",
+                       _IPv6 is not null? _IPv6.ToString() : "",
+                       ((IPEndPoint)ServerState.Instance.Model.Listener.LocalEndpoint).Port.ToString(),
                        _credentialsConfirmID.ToString()
                    }).Data;
 
             if (sendingData is null)
                 return;
 
-            var endpoint = new IPEndPoint(IPAddress.Broadcast, ServerState.Instance.Model.ServerSendPort);
+            var endpoint = new IPEndPoint(IPAddress.Broadcast, ServerModel.DEFAULT_SERVER_SEND_PORT);
             ServerState.Instance.Model.Server.Send(sendingData, sendingData.Length, endpoint);
         }
         protected override void Communication()

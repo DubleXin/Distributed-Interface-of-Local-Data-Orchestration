@@ -5,6 +5,7 @@ using DILDO.controllers;
 using DILDO.net.IO;
 using DILDO.server.models;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 
 namespace Client.Controllers
@@ -12,6 +13,19 @@ namespace Client.Controllers
     public class ClientPacketHandler : PacketHandler
     {
         public ClientPacketHandler() : base() { }
+
+        public override void StartPairing()
+        {
+            ClientState.Instance.Model.TcpClient = new TcpClient();
+            Debug.Log<ServerModel>($" <WHI>Client's <YEL>TCP Client <DGE>started.");
+            base.StartPairing();
+        }
+        public override void StopPairing()
+        {
+            ClientState.Instance.Model.TcpClient.Close();
+            Debug.Log<ServerModel>($" <WHI>Client's <YEL>TCP Client <DGE>close.");
+            base.StartPairing();
+        }
 
         protected override void LifeCycle()
         {

@@ -40,8 +40,8 @@ namespace DILDO.controllers
         #region CANCELLATION
 
         public CancellationTokenSource LifeCycleCTS { get; protected set; }
-        public bool IsPairing { get; set; }
-        public bool IsCommunicating { get; set; }
+        public bool IsPairing { get; private set; }
+        public bool IsCommunicating { get; private set; }
 
         #endregion
 
@@ -69,6 +69,12 @@ namespace DILDO.controllers
 
         #region PUBLIC CODE INTERFACE
         public void Launch() => Task.Run(LifeCycle);
+
+        public virtual void StartPairing() => IsPairing = true;
+        public virtual void StopPairing() => IsPairing = false;
+
+        public  virtual void StartCommunication() => IsCommunicating = true;
+        public virtual void StopCommunication() => IsCommunicating = false;
 
         public void Dispose()
         {
