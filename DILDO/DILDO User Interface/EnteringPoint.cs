@@ -1,6 +1,6 @@
 ﻿using DILDO;
 using DILDO.client;
-using DILDO.client.MVM.model;
+using DILDO.client.models;
 
 #region READ ME
 
@@ -103,8 +103,8 @@ using DILDO.client.MVM.model;
 #if !UNITY_5_OR_NEWER
 public static class EnteringPoint
 {
-    private const string VERSION = "1.7.2";
-    private const string VERSION_NAME = "Sencha Tea Edition";
+    private const string VERSION = "1.7.3";
+    private const string VERSION_NAME = "Matcha Tea Edition";
 
     [STAThread]
     public static int Main(string[] args)
@@ -135,9 +135,9 @@ public static class EnteringPoint
                 "\n<GRE> >> [switch] with argument [s/c]" +
                 "\n    <DGE>Example: switch c" +
                 "\n    <DGE>Info: switches current networking state between Server(s) and Client(c)\n" +
-                "\n<GRE> >> [visible] with argument [true/false]" +
-                "\n    <DGE>Example: visible true" +
-                "\n    <DGE>Info: sets server visibility to true or false, via starting/stopping broadcasting credentials\n" +
+                "\n<GRE> >> [set pairing] with argument [true/false]" +
+                "\n    <DGE>Example: set pairing true" +
+                "\n    <DGE>Info: starts pairing, if (s): broadcasting credentials, (c): searching for unique servers\n" +
                 "\n<GRE> >> [set tickrate] with int argument [?]" +
                 "\n    <DGE>Example: set tickrate 16" +
                 "\n    <DGE>Info: sets server ticks per second\n" +
@@ -155,7 +155,7 @@ public static class EnteringPoint
 
             else if (parts.Length == 2 && parts[0] == "init")
             {
-                NetworkingInput.Init(new User()
+                NetworkingInput.Init(new UserData()
                 {
                     UserName = name,
                     State = parts[1] == "s" ? NetworkingState.SERVER : NetworkingState.CLIENT
@@ -167,9 +167,9 @@ public static class EnteringPoint
                 NetworkingInput.Switch(parts[1] == "s" ? NetworkingState.SERVER : NetworkingState.CLIENT);
             }
 
-            else if (parts.Length == 2 && parts[0] == "visible")
+            else if (parts.Length == 3 && parts[0] == "set" && parts[1] == "pairing")
             {
-                NetworkingInput.SetPairing(parts[1] == "true");
+                NetworkingInput.SetPairing(parts[2] == "true");
             }
 
             else if (parts.Length == 2 && parts[0] == "draw")

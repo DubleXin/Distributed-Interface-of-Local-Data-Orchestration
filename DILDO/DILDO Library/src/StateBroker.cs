@@ -1,4 +1,4 @@
-﻿using DILDO.client.MVM.model;
+﻿using DILDO.client.models;
 using DILDO.server;
 using DILDO.client;
 
@@ -13,9 +13,6 @@ public class StateBroker
     public bool IsClient => CurrentProfile is ClientState;
 
     public Action? OnStateClosed { get; private set; }
-    
-    private Queue<NetworkingState>? _queuedStateChanges;
-    public byte MaxQueuedStates;
 
     public StateBroker()
     {
@@ -27,19 +24,12 @@ public class StateBroker
 
         Instance = this;
 
-        MaxQueuedStates = 8;
-        _queuedStateChanges = new(MaxQueuedStates);
-
         SwitchMode(NetworkingData.This.State);
     }
     public void SwitchMode(NetworkingState mode)
     {
         if (OnStateClosed != null)
-        {
-            if(_queuedStateChanges.Count < MaxQueuedStates)
-                _queuedStateChanges.Enqueue(mode);
             return;
-        }
 
         StateProfile? 
             next = mode == NetworkingState.SERVER ? 
@@ -57,9 +47,6 @@ public class StateBroker
             NetworkingData.This.State = mode;
 
             OnStateClosed = null;
-
-            while (_queuedStateChanges.Count > 0)
-                SwitchMode(_queuedStateChanges.Dequeue());
         };
 
         if (CurrentProfile != null)

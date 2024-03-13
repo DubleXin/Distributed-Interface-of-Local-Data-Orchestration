@@ -1,16 +1,13 @@
-﻿using DILDO.server.models;
-using DILDO.net.IO;
-using DILDO.server.core.factories;
-
-using System.Net;
-
-using ServerModel = DILDO.server.models.ServerModel;
-using DILDO.controllers;
+﻿using DILDO.controllers;
 using Client.Controllers;
+using DILDO.client.models;
+
 namespace DILDO.client;
 
-public class ClientState : StateProfile, IDisposable
+public class ClientState : StateProfile
 {
+    #region FIELDS
+    
     public static ClientState? Instance { get; private set; }
 
     public override PacketHandler? PacketHandler
@@ -20,63 +17,61 @@ public class ClientState : StateProfile, IDisposable
     }
     private ClientPacketHandler? _packetHandler;
 
-    public ClientModel Model { get; private set; }
+    public ClientModel? Model { get; private set; }
 
-    public ClientState() : base()
-    {
-        Model = new();
-        Instance = this;
-    }
+    #endregion
 
-    public (Guid, string)[] GetServers()
-    {
-        var servers = Model.ServerNames.ToArray();
-        List<(Guid, string)> listToInvoke = new();
-        foreach (var server in servers)
-            listToInvoke.Add((server.Key, server.Value));
-        return listToInvoke.ToArray();
-    }
+    #region CONSTRUCTOR
+
+    public ClientState() : base() => Instance = this;
+    
+    #endregion
+
+    #region LIFE CYCLE
 
     public override void Launch()
     {
-        Debug.Log<ClientState>($"<WHI> Client Started.");
+        Model = new ClientModel();
+        PacketHandler = new ClientPacketHandler();
+
+        PacketHandler.OnDisposed += Model.Dispose;
+
+        Debug.Log<ClientState>($" <WHI>Client <GRE>Started.");
+
+        PacketHandler.Launch();
     }
+    public override void Close()
+    {
+        Model.SendClient.Close();
+        Model.ReceiveClient.Close();
+
+        PacketHandler.LifeCycleCTS.Cancel();
+    }
+
+    #endregion
+
+    #region CONTROLS
+    
+    public (Guid, string)[] GetServers()
+    {
+        var servers = Model.Servers.ToArray();
+        List<(Guid, string)> listToInvoke = new();
+        foreach (var server in servers)
+            listToInvoke.Add((server.Key, server.Value.ServerName));
+        return listToInvoke.ToArray();
+    }
+
     //TODO adapt to tcp
     public void ConnectToServer(Guid guid)
     {
-        if(!Model.ServerConnectInfo.TryGetValue(guid, out var info))
-            return;
-        var sendingData = PacketFactory.GetFactory
-                (OpCode.BroadcastStringMessage).GetPacket(new string[]
-                {
-                    Guid.NewGuid().ToString(),
-                    ((int)PacketHandler.PacketType.SessionConfirm).ToString(),
-                    guid.ToString(),
-                    info.ToString(),
-                    Model.ID.ToString(),
-                    Guid.NewGuid().ToString()
-                }).Data;
-
-        if (sendingData is null)
+        Debug.Log<ClientState>($"<DMA> Requesting connection to server named: <CYA>{Model.Servers[guid].ServerName}");
+        if (!Model.Servers.TryGetValue(guid, out var serverData))
             return;
 
-        var endpoint = new IPEndPoint
-        (IPAddress.Broadcast, ServerModel.DEFAULT_SERVER_RECEIVE_PORT);
-        Model.SendClient.Send(sendingData, sendingData.Length, endpoint);
-        Debug.Log<ClientState>($"<DMA> Requesting connection to server named: <MAG>{Model.ServerNames[guid]}");
+        Debug.Log<ClientState>($"<YEL>  " +
+            $"{(serverData.V4 is null ? "" : $"IPv4 : {serverData.V4}")} , " +
+            $"{(serverData.V6 is null ? "" : $"IPv6 : {serverData.V6}")}");
     }
-
-    public override void Close() 
-    {
-        Model.CancellationToken.Cancel();
-        Model.ReceiveClient.Close(); 
-    }
-
-    public void Dispose()
-    {
-        Model.Dispose();
-
-        Debug.Log<ClientState>("<DRE> Client Closed and Disposed.");
-        StateBroker.Instance.OnStateClosed?.Invoke();
-    }
+    
+    #endregion
 }

@@ -3,12 +3,11 @@ using DILDO.server.controllers;
 using ServerModel = DILDO.server.models.ServerModel;
 
 namespace DILDO.server;
-public class ServerState : StateProfile, IDisposable
+public class ServerState : StateProfile
 {
-    public static ServerState? Instance { get; private set; }
+    #region FIELDS
 
-    private ServerModel? _model;
-    public ServerModel? Model { get => _model; }
+    public static ServerState? Instance { get; private set; }
 
     public override PacketHandler? PacketHandler 
     { 
@@ -17,35 +16,37 @@ public class ServerState : StateProfile, IDisposable
     }
     private ServerPacketHandler? _packetHandler;
 
-    private CancellationTokenSource? _cts;
+    public ServerModel? Model { get; private set; }
+
+    #endregion
+
+    #region CONSTRUCTOR
 
     public ServerState() : base() => Instance = this;
-    
+
+    #endregion
+
+    #region LIFE CYCLE
+
     public override void Launch()
     {
-        _cts = new();
-        _model = new();
-        _packetHandler = new();
+        Model = new();
+        PacketHandler = new ServerPacketHandler();
 
-        Debug.Log<ServerState>($"<WHI> Server Started.");
-        Task.Run(LifeCycle);
+        PacketHandler.OnDisposed += Model.Dispose;
+
+        Debug.Log<ServerState>($" <WHI>Server <GRE>Started.");
+
+        PacketHandler.Launch();
     }
-    private void LifeCycle()
+
+    public override void Close()
     {
-        _packetHandler.Launch();
-        _model.Client.EnableBroadcast = true;
+        Model.Client.Close();
+        Model.Server.Close();
 
-        Task.Run(() =>
-        {
-            while (!_model.CancellationToken.IsCancellationRequested) {}
-            Debug.Log<ServerState>($"<DRE> Server Closed and Disposed.");
-            StateBroker.Instance.OnStateClosed?.Invoke();
-        });
-
-        while (!_cts.Token.IsCancellationRequested) { }
-        _packetHandler.LifeCycleCTS.Cancel();
+        PacketHandler.LifeCycleCTS.Cancel();
     }
 
-    public override void Close() => _cts.Cancel();
-    public void Dispose() => _model.Dispose();
+    #endregion
 }

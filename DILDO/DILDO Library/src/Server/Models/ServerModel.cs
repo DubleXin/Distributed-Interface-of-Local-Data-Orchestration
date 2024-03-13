@@ -20,42 +20,36 @@ namespace DILDO.server.models
         /// </summary>
         public UdpClient Server { get; private set; }
 
-        private bool _isDisposed;
-
         public ushort ServerReceivePort { get; private set; }
         public ushort ServerSendPort { get; private set; }
 
         public ConcurrentDictionary<Guid, string> Users { get; private set; }
-        public CancellationTokenSource CancellationToken { get; private set; }
 
-        public ServerModel(
-            ushort sendPort = DEFAULT_SERVER_SEND_PORT,
-            ushort receivePort = DEFAULT_SERVER_RECEIVE_PORT
-            )
+        private bool _isDisposed;
+
+        public ServerModel()
         {
             ServerID = Guid.NewGuid();
-            ServerReceivePort = receivePort;
-            ServerSendPort = sendPort;
+            ServerReceivePort = DEFAULT_SERVER_RECEIVE_PORT;
+            ServerSendPort = DEFAULT_SERVER_SEND_PORT;
             Users = new();
-            CancellationToken = new CancellationTokenSource();
 
-            Client = new(receivePort);
+            Client = new(DEFAULT_SERVER_RECEIVE_PORT);
             Server = new();
         }
 
-        public void Dispose() => Dispose(true);
-        protected virtual void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (!_isDisposed)
-            {
-                if (disposing)
-                {
-                    Server.Close();
-                    Client.Close();
-                    CancellationToken.Cancel();
-                }
-                _isDisposed = true;
-            }
+            if (_isDisposed)
+                return;
+
+            Server.Dispose();
+            Client.Dispose();
+
+            _isDisposed = true;
+
+            Debug.Log<ServerModel>(" <WHI>Server<DRE> Closed and Disposed.");
+            StateBroker.Instance.OnStateClosed?.Invoke();
         }
     }
 }

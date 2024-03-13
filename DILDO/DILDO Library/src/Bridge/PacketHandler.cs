@@ -2,12 +2,14 @@
 
 using System.Collections.Concurrent;
 using System.Net.Sockets;
-using DILDO.client.MVM.model;
+using DILDO.client.models;
 
 namespace DILDO.controllers
 {
     public abstract class PacketHandler : IDisposable
     {
+        public Action? OnDisposed;
+
         public enum PacketType : int
         {
             BROADCAST_CREDENTIALS = 0,
@@ -15,7 +17,7 @@ namespace DILDO.controllers
         }
 
         #region FIELDS
-        protected ConcurrentDictionary<User, NetworkStream> _streams;
+        protected ConcurrentDictionary<UserData, NetworkStream> _streams;
         #endregion
 
         #region CONFIG
@@ -35,7 +37,7 @@ namespace DILDO.controllers
 
         #endregion
 
-        #region CANCELLATION TOKEN SOURCES
+        #region CANCELLATION
 
         public CancellationTokenSource LifeCycleCTS { get; protected set; }
         public bool IsPairing { get; set; }
@@ -68,13 +70,16 @@ namespace DILDO.controllers
         #region PUBLIC CODE INTERFACE
         public void Launch() => Task.Run(LifeCycle);
 
-        public void Dispose() => LifeCycleCTS.Dispose();
-
+        public void Dispose()
+        {
+            LifeCycleCTS.Dispose();
+            OnDisposed?.Invoke();
+        }
         #endregion
 
         #region PRIVATE/PROTECTED CODE INTERFACE
 
-        private void LifeCycle()
+        protected virtual void LifeCycle()
         {
             while (!LifeCycleCTS.IsCancellationRequested)
             {

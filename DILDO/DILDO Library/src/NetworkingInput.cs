@@ -1,5 +1,5 @@
 ﻿using DILDO.client;
-using DILDO.client.MVM.model;
+using DILDO.client.models;
 using DILDO.server;
 using DILDO.server.controllers;
 
@@ -9,10 +9,10 @@ public static class NetworkingData
 {
     private static bool _initialized = false;
 
-    public static User? This { get; private set; }
+    public static UserData? This { get; private set; }
     public static StateBroker? Broker { get; private set; }
 
-    public static bool Init(User user)
+    public static bool Init(UserData user)
     {
         if (_initialized)
             return false;
@@ -26,7 +26,7 @@ public static class NetworkingData
 
 public static class NetworkingInput
 {
-    public static void Init(User owner) 
+    public static void Init(UserData owner) 
     {
         if (!NetworkingData.Init(owner))
             Debug.Exception("NetworkingInput.Init(User user) actively refuses", 
@@ -46,11 +46,11 @@ public static class NetworkingInput
         if (StateBroker.Instance is not null)
             if (StateBroker.Instance.CurrentProfile.PacketHandler is not null)
             {
-                if (state == ServerState.Instance.PacketHandler.IsPairing)
+                if (state == StateBroker.Instance.CurrentProfile.PacketHandler.IsPairing)
                     return;
 
-                ServerState.Instance.PacketHandler.IsPairing = state;
-                Debug.Log<ServerPacketHandler>($"<WHI> {(StateBroker.Instance.IsServer? "Server" : "Client")} {(state? "started" : "stopped")} pairing.");
+                StateBroker.Instance.CurrentProfile.PacketHandler.IsPairing = state;
+                Debug.Log<StateBroker>($"<WHI> {(StateBroker.Instance.IsServer? "Server" : "Client")} {(state? "started" : "stopped")} pairing.");
             }
             else
                 Debug.Exception("SetPairing(bool state) NullReferenceException",

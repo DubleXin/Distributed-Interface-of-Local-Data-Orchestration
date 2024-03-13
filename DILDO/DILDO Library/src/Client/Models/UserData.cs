@@ -1,6 +1,6 @@
-﻿namespace DILDO.client.MVM.model
+﻿namespace DILDO.client.models
 {
-    public class User
+    public class UserData
     {
         public string? UserName         { get; set; } = "NONAME";
         public Guid? UserId             { get; set; } = Guid.NewGuid();
