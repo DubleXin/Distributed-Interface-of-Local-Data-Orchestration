@@ -16,13 +16,11 @@ namespace Client.Controllers
 
         public override void StartPairing()
         {
-            ClientState.Instance.Model.TcpClient = new TcpClient();
             Debug.Log<ServerModel>($" <WHI>Client's <YEL>TCP Client <DGE>started.");
             base.StartPairing();
         }
         public override void StopPairing()
         {
-            ClientState.Instance.Model.TcpClient.Close();
             Debug.Log<ServerModel>($" <WHI>Client's <YEL>TCP Client <DGE>close.");
             base.StartPairing();
         }

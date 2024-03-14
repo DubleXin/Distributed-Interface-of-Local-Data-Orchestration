@@ -38,14 +38,19 @@ namespace DILDO.server.controllers
 
         public override void StartPairing()
         {
-            ServerState.Instance.Model.Listener = new(IPAddress.Any, ServerModel.DEFAULT_SERVER_LISTEN_PORT);
+            ServerState.Instance.Model.Listener.Start();
             Debug.Log<ServerModel>($" <WHI>Servers's <YEL>Listener <DGE>started at port {((IPEndPoint)ServerState.Instance.Model.Listener.LocalEndpoint).Port.ToString()}.");
+
+            _acceptCts = new();
             Task.Run(AcceptConnection);
+
             base.StartPairing();
         }
         public override void StopPairing()
         {
+            _acceptCts?.Cancel();
             ServerState.Instance.Model.Listener.Stop();
+
             Debug.Log<ServerModel>($" <WHI>Servers's <YEL>Listener <DGE>closed.");
             base.StartPairing();
         }
@@ -79,7 +84,7 @@ namespace DILDO.server.controllers
         }
         private void AcceptConnection()
         {
-            while (_acceptCts.IsCancellationRequested)
+            while (!_acceptCts.IsCancellationRequested)
             {
                 try
                 {

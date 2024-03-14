@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
 
 namespace DILDO.server.models
@@ -21,7 +22,7 @@ namespace DILDO.server.models
         /// Use the "ServerSendPort".
         /// </summary>
         public UdpClient Server { get; private set; }
-        public TcpListener Listener { get; set; }
+        public TcpListener Listener { get; private set; }
 
         public ConcurrentDictionary<Guid, string> Users { get; private set; }
 
@@ -31,6 +32,8 @@ namespace DILDO.server.models
         {
             ServerID = Guid.NewGuid();
             Users = new();
+
+            Listener = new(IPAddress.Any, 0);
 
             Client = new(DEFAULT_SERVER_RECEIVE_PORT);
             Server = new();

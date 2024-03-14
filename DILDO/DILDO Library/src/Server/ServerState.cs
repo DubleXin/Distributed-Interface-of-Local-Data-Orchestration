@@ -1,7 +1,8 @@
 ﻿using DILDO.controllers;
 using DILDO.server.controllers;
+using DILDO.server.models;
 using System.Net.Sockets;
-using ServerModel = DILDO.server.models.ServerModel;
+using System.Text;
 
 namespace DILDO.server;
 public class ServerState : StateProfile
@@ -51,7 +52,18 @@ public class ServerState : StateProfile
 
     public void ValidateConnection(TcpClient client)
     {
+        Debug.Log<ServerState>($" <WHI>Server <MAG>Accepted connection request, starting validation sequence.");
 
+        NetworkStream stream = client.GetStream();
+
+        //SEND TEST ZONE // THERE SHOULD BE VALIDATION-SPECIFIC TALKING
+        //AND IF WE APPROVE THE CLIENT HERE WE SEND THE APPROVAL AND SAVE
+        //CLIENT AND ITS NETWORKING STREAM INTO THE DICTIONARY OF THEM 
+        stream.Write(Encoding.UTF32.GetBytes("<WHI>message 1"));
+        Thread.Sleep(10);
+        stream.Write(Encoding.UTF32.GetBytes("<WHI>message 2"));
+        Thread.Sleep(10);
+        stream.Write(Encoding.UTF32.GetBytes("<WHI>message 3"));
     }
 
     #endregion

@@ -1,6 +1,9 @@
 ﻿using DILDO.controllers;
 using Client.Controllers;
 using DILDO.client.models;
+using System.Net.Sockets;
+using System.Text;
+using System.Diagnostics;
 
 namespace DILDO.client;
 
@@ -42,6 +45,7 @@ public class ClientState : StateProfile
     }
     public override void Close()
     {
+        Model.TcpClient.Close();
         Model.SendClient.Close();
         Model.ReceiveClient.Close();
 
@@ -73,11 +77,27 @@ public class ClientState : StateProfile
             $"{(serverData.V4 is null ? "" : $"IPv4 : {serverData.V4}")} , " +
             $"{(serverData.V6 is null ? "" : $"IPv6 : {serverData.V6}")}");
 
-        if(serverData.V4 is not null)
-            Model.TcpClient.Connect(serverData.V4.Address, serverData.V4.Port);
-        else if(serverData.V6 is not null)
-            Model.TcpClient.Connect(serverData.V6.Address, serverData.V6.Port);
+        try
+        {
+            if (serverData.V4 is not null)
+                Model.TcpClient.Connect(serverData.V4.Address, serverData.V4.Port);
+            else if (serverData.V6 is not null)
+                Model.TcpClient.Connect(serverData.V6.Address, serverData.V6.Port);
 
+            NetworkStream stream = Model.TcpClient.GetStream();
+
+            //RECEIVE TEST ZONE // THERE SHOULD BE VALIDATION-SPECIFIED TALKING
+            //AND IF VALIDATION APPROVES THE CONNECTION WE SAVE THE SERVER
+            //AND ITS NETWORK STREAM FOR "COMMUNICATION" AND SET IsCommunicating TO true.
+            byte[] buffer = new byte[4096];
+            stream.Read(buffer, 0, 4096);
+            Debug.Log<ClientState>(Encoding.UTF32.GetString(buffer));
+            stream.Read(buffer, 0, 4096);
+            Debug.Log<ClientState>(Encoding.UTF32.GetString(buffer));
+            stream.Read(buffer, 0, 4096);
+            Debug.Log<ClientState>(Encoding.UTF32.GetString(buffer));
+        }
+        catch(Exception ex) { Debug.Exception(ex.Message, "no additional info."); }
     }
     
     #endregion

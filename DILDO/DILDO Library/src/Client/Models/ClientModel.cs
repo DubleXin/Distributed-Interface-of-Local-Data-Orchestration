@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.Sockets;
+using System.Reflection;
 
 namespace DILDO.client.models
 {
@@ -24,8 +25,9 @@ namespace DILDO.client.models
 
         public ClientModel()
         {
+            TcpClient = new TcpClient();
             SendClient = new UdpClient();
-            ReceiveClient = new UdpClient(DILDO.server.models.ServerModel.DEFAULT_SERVER_SEND_PORT);
+            ReceiveClient = new UdpClient(server.models.ServerModel.DEFAULT_SERVER_SEND_PORT);
 
             Servers = new();
 
