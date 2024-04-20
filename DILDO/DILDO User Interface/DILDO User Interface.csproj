@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <Reference Include="DILDO">
-      <HintPath>..\DILDO Library\bin\Debug\net7.0\DILDO.dll</HintPath>
+      <HintPath>..\DILDO Library\bin\Release\net7.0\DILDO.dll</HintPath>
     </Reference>
   </ItemGroup>
 

@@ -4,25 +4,6 @@ using DILDO.server;
 
 namespace DILDO;
 
-public static class NetworkingData
-{
-    private static bool _initialized = false;
-
-    public static UserData? This { get; private set; }
-    public static StateBroker? Broker { get; private set; }
-
-    public static bool Init(UserData user)
-    {
-        if (_initialized)
-            return false;
-
-        This = user;
-        Broker = new();
-
-        return _initialized = true;
-    }
-}
-
 public static class NetworkingInput
 {
     public static void Init(UserData owner) 
@@ -152,6 +133,23 @@ public static class NetworkingInput
                 else
                     Debug.Exception("Send(object message) NotConnectedTCPException",
                         "Client wasn't connected to server, connect to Server");
+            else
+                Debug.Exception("Send(object message) WrongStateContextException",
+                    "Current networking state is not suitable, switch to \"Client\"");
+        else
+            Debug.Exception("Send(object message) NullReferenceException",
+                "StateBroker.Instance is null, NetworkingData wasn't initialized");
+    }
+
+    public static void Disconnect()
+    {
+        if (StateBroker.Instance is not null)
+            if (StateBroker.Instance.IsClient)
+                if (ClientState.Instance.Core.ConnectedServer != Guid.Empty)
+                    ClientState.Instance.Core.Disconnect();
+                else
+                    Debug.Exception("Send(object message) NotConnectedTCPException",
+                        "Already disconnected");
             else
                 Debug.Exception("Send(object message) WrongStateContextException",
                     "Current networking state is not suitable, switch to \"Client\"");

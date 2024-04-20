@@ -1,11 +1,6 @@
 ﻿using DILDO.controllers;
 using Client.Controllers;
 using DILDO.client.models;
-using System.Net.Sockets;
-using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System;
-using DILDO.server;
 
 namespace DILDO.client;
 

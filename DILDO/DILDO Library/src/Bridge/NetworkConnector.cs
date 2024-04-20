@@ -12,8 +12,7 @@ namespace DILDO.controllers
 
         public enum PacketType : int
         {
-            BROADCAST_CREDENTIALS = 0,
-            SessionConfirm = 1
+            BROADCAST_CREDENTIALS = 0
         }
 
         #region FIELDS
@@ -98,7 +97,7 @@ namespace DILDO.controllers
         protected abstract void Pairing();
 
         private void SetStandardConfig() => SetConfig();
-        public virtual void SetConfig(int tickRate = 64)
+        public virtual void SetConfig(int tickRate = 1)
         {
             _tickRate = tickRate;
         }

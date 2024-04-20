@@ -89,10 +89,14 @@ namespace DILDO
                     }
                 }
 
-                if (buffer)
+                if (buffer && j - i + 2 < message.Length)
                     j += 3;
 
-                Console.Write(message.Substring(i, j - i - 1));
+                if (i != 0)
+                    Console.Write(message.Substring(i, j - i - 1));
+                else
+                    Console.Write(message.Substring(i - 1, j - i));
+
                 if (!buffer)
                 {
                     Console.ForegroundColor = DEFAULT;

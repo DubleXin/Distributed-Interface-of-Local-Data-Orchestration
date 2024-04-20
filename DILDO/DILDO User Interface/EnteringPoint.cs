@@ -127,7 +127,7 @@ public static class EnteringPoint
 
             if (parts[0] == "send")
             {
-                NetworkingInput.Send(command.Substring(4));
+                NetworkingInput.Send(command.Substring(5));
             }
 
             else if (parts.Length == 1 && parts[0] == "help")
@@ -156,6 +156,11 @@ public static class EnteringPoint
                 "\n    <DGE>Example: exit" +
                 "\n    <DGE>Info: turns off DILDO and exits application\n" +
                 "");
+            }
+
+            else if (parts.Length == 1 && parts[0] == "disconnect")
+            {
+                NetworkingInput.Disconnect();
             }
 
             else if (parts.Length == 1 && parts[0] == "clear")

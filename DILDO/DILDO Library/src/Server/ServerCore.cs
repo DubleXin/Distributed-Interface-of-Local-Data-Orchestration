@@ -78,8 +78,7 @@ public class ServerCore
         {
             ServerState.Instance.Data.Clients.Remove(client);
             ServerState.Instance.Data.PendingMessages.Add(
-                (null, 
-                Encoding.UTF8.GetBytes($"{client} has disconnected from the server.")));
+                (null, Encoding.UTF8.GetBytes($"{client} has disconnected from the server.")));
         }
     }
     private string[] GetAllApartFrom(string key)

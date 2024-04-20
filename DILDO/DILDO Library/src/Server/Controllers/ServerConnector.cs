@@ -4,7 +4,6 @@ using DILDO.controllers;
 
 using System.Net;
 using System.Net.Sockets;
-using Client.Controllers;
 
 namespace DILDO.server.controllers
 {

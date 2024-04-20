@@ -26,7 +26,7 @@ public class ClientCore
     private void LifeCycle()
     {
         NetworkStream stream = TcpClient.GetStream();
-        while (_active && TcpClient.Connected)
+        while (_active)
         {
             try
             {
@@ -35,8 +35,11 @@ public class ClientCore
             }
             catch (Exception ex)
             {
-                Debug.Exception(ex.Message, "no additional info.");
-                Reconnect();
+                if (_active)
+                {
+                    Debug.Exception(ex.Message, "no additional info. ");
+                    Reconnect();
+                }
             }
             Thread.Sleep(100);
         }
@@ -78,7 +81,10 @@ public class ClientCore
     public void Disconnect()
     {
         TcpClient.Close();
-        ConnectedServer = Guid.Empty;
+        Close();
+        _active = true;
+
+        Debug.Log<ClientCore>(" <DGE>Successfully disconnected from server ");
     }
 
     public void Send(string pInput)
