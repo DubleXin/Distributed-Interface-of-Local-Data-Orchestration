@@ -6,9 +6,9 @@ using DILDO.client.models;
 
 namespace DILDO.controllers
 {
-    public abstract class PacketHandler : IDisposable
+    public abstract class NetworkConnector
     {
-        public Action? OnDisposed;
+        protected Task? LifeCycleTask;
 
         public enum PacketType : int
         {
@@ -17,7 +17,7 @@ namespace DILDO.controllers
         }
 
         #region FIELDS
-        protected ConcurrentDictionary<UserData, NetworkStream> _streams;
+        protected ConcurrentDictionary<UserData, NetworkStream>? _streams;
         #endregion
 
         #region CONFIG
@@ -39,7 +39,7 @@ namespace DILDO.controllers
 
         #region CANCELLATION
 
-        public CancellationTokenSource LifeCycleCTS { get; protected set; }
+        public CancellationTokenSource? LifeCycleCTS { get; protected set; }
         public bool IsPairing { get; private set; }
         public bool IsCommunicating { get; private set; }
 
@@ -47,15 +47,13 @@ namespace DILDO.controllers
 
         #region CONSTRUCTOR
 
-        public PacketHandler(bool immediatePairing = false)
+        public NetworkConnector(bool immediatePairing = false)
         {
             _streams = new();
 
             ReceivedPacketBuffer = new();
             SendPacketBuffer = new();
             _packetAttempts = new();
-
-            LifeCycleCTS = new();
 
             IsPairing = immediatePairing;
             IsCommunicating = false;
@@ -68,18 +66,19 @@ namespace DILDO.controllers
         #region CODE INTERFACE
 
         #region PUBLIC CODE INTERFACE
-        public void Launch() => Task.Run(LifeCycle);
-
+        public virtual void Launch()
+        {
+            LifeCycleCTS = new();
+            LifeCycleTask = Task.Run(LifeCycle);
+        }
         public virtual void StartPairing() => IsPairing = true;
         public virtual void StopPairing() => IsPairing = false;
 
-        public  virtual void StartCommunication() => IsCommunicating = true;
-        public virtual void StopCommunication() => IsCommunicating = false;
-
-        public void Dispose()
+        public virtual void Close()
         {
+            LifeCycleCTS.Cancel();
+            LifeCycleTask.Wait();
             LifeCycleCTS.Dispose();
-            OnDisposed?.Invoke();
         }
         #endregion
 
@@ -91,16 +90,12 @@ namespace DILDO.controllers
             {
                 if (IsPairing)
                     Pairing();
-                if (IsCommunicating)
-                    Communication();
 
                 Thread.Sleep(_tickDelay);
             }
-            Dispose();
         }
 
         protected abstract void Pairing();
-        protected abstract void Communication();
 
         private void SetStandardConfig() => SetConfig();
         public virtual void SetConfig(int tickRate = 64)

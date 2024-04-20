@@ -1,5 +1,4 @@
-﻿using DILDO.client.models;
-using DILDO.server;
+﻿using DILDO.server;
 using DILDO.client;
 
 namespace DILDO;

@@ -1,6 +1,5 @@
 ﻿using DILDO;
 using DILDO.client;
-using DILDO.client.models;
 using DILDO.controllers;
 using DILDO.net.IO;
 using DILDO.server.models;
@@ -10,24 +9,27 @@ using System.Text;
 
 namespace Client.Controllers
 {
-    public class ClientPacketHandler : PacketHandler
+    public class ClientConnector : NetworkConnector
     {
-        public ClientPacketHandler() : base() { }
+        public UdpClient? SendClient    { get; private set; }
+        public UdpClient? ReceiveClient { get; private set; }
+
+        public ClientConnector() : base() { }
 
         public override void StartPairing()
         {
-            Debug.Log<ServerModel>($" <WHI>Client's <YEL>TCP Client <DGE>started.");
+            Debug.Log<ClientConnector>($" <WHI>Client <DGE>started pairing.");
             base.StartPairing();
         }
         public override void StopPairing()
         {
-            Debug.Log<ServerModel>($" <WHI>Client's <YEL>TCP Client <DGE>close.");
+            Debug.Log<ClientConnector>($" <WHI>Client <DGE>stopped pairing.");
             base.StartPairing();
         }
 
         protected override void LifeCycle()
         {
-            ClientState.Instance.Model.ReceiveClient.EnableBroadcast = true;
+            ReceiveClient.EnableBroadcast = true;
             base.LifeCycle();
         }
 
@@ -36,7 +38,7 @@ namespace Client.Controllers
             var endpoint = new IPEndPoint(IPAddress.Any, 0);
             try
             {
-                byte[] message = ClientState.Instance.Model.ReceiveClient.Receive(ref endpoint);
+                byte[] message = ReceiveClient.Receive(ref endpoint);
                 string encoded = Encoding.UTF32.GetString(message);
 
                 PacketReaderBroker reader = new(encoded);
@@ -53,19 +55,13 @@ namespace Client.Controllers
                 if (packet.RawData.Length < 4)
                     return;
 
-                TryAddUDPPacketToList(packet);
                 TryAddServerToList(packet);
             }
             catch(Exception ex) { Debug.Log($"<RED>{ex.Message}"); }
         }
-        protected override void Communication()
-        {
-
-        }
-
         private void TryAddServerToList(UDPPacket packet)
         {
-            var model = ClientState.Instance.Model;
+            var model = ClientState.Instance.Data;
             var raw = packet.RawData;
 
             if (Guid.TryParse(raw[2], out var guid))
@@ -79,7 +75,7 @@ namespace Client.Controllers
                     return;
                 }
 
-                var serverData = new ServerData(raw[3], Guid.Parse(raw[2]), v4, v6);
+                var serverData = new DILDO.client.models.ServerData(raw[3], Guid.Parse(raw[2]), v4, v6);
                 if (model.Servers.TryAdd(guid, serverData))
                 {
                     var servers = model.Servers.ToArray();
@@ -92,10 +88,20 @@ namespace Client.Controllers
                 }
             }
         }
-        private void TryAddUDPPacketToList(UDPPacket packet)
+
+        public override void Launch()
         {
-            if (ReceivedPacketBuffer.TryAdd(packet.ID, packet))
-                ClientState.Instance.RaisePacketReceiver(packet, "private void TryAddPacketToList(UDPPacket packet)");
+            SendClient = new UdpClient();
+            ReceiveClient = new UdpClient(ServerData.DEFAULT_SERVER_SEND_PORT);
+
+            base.Launch();
+        }
+        public override void Close()
+        {
+            base.Close();
+
+            SendClient.Close();
+            ReceiveClient.Close();
         }
     }
 }

@@ -3,7 +3,9 @@ using Client.Controllers;
 using DILDO.client.models;
 using System.Net.Sockets;
 using System.Text;
-using System.Diagnostics;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System;
+using DILDO.server;
 
 namespace DILDO.client;
 
@@ -13,43 +15,48 @@ public class ClientState : StateProfile
     
     public static ClientState? Instance { get; private set; }
 
-    public override PacketHandler? PacketHandler
+    public override NetworkConnector? Connector
     {
-        get => _packetHandler;
-        protected set => _packetHandler = value as ClientPacketHandler;
+        get => _connector;
+        protected set => _connector = value as ClientConnector;
     }
-    private ClientPacketHandler? _packetHandler;
+    private ClientConnector? _connector;
 
-    public ClientModel? Model { get; private set; }
+    public ClientData? Data { get; private set; }
+    public ClientCore? Core { get; private set; }
 
     #endregion
 
     #region CONSTRUCTOR
 
-    public ClientState() : base() => Instance = this;
-    
+    public ClientState() : base()
+    {
+        Instance = this;
+        
+        Connector = new ClientConnector();
+        Core      = new ClientCore();
+    }
+
     #endregion
 
     #region LIFE CYCLE
 
     public override void Launch()
     {
-        Model = new ClientModel();
-        PacketHandler = new ClientPacketHandler();
+        Data = new ClientData();
 
-        PacketHandler.OnDisposed += Model.Dispose;
+        Core.Launch();
+        Connector.Launch();
 
         Debug.Log<ClientState>($" <WHI>Client <GRE>Started.");
-
-        PacketHandler.Launch();
     }
     public override void Close()
     {
-        Model.TcpClient.Close();
-        Model.SendClient.Close();
-        Model.ReceiveClient.Close();
+        Core.Close();
+        Connector.Close();
 
-        PacketHandler.LifeCycleCTS.Cancel();
+        Debug.Log<ServerData>(" <WHI>Client<DRE> Closed.");
+        StateBroker.Instance.OnStateClosed?.Invoke();
     }
 
     #endregion
@@ -58,7 +65,7 @@ public class ClientState : StateProfile
     
     public (Guid, string)[] GetServers()
     {
-        var servers = Model.Servers.ToArray();
+        var servers = Data.Servers.ToArray();
         List<(Guid, string)> listToInvoke = new();
         
         foreach (var server in servers)
@@ -67,38 +74,5 @@ public class ClientState : StateProfile
         return listToInvoke.ToArray();
     }
 
-    public void ConnectToServer(Guid guid)
-    {
-        Debug.Log<ClientState>($"<DMA> Requesting connection to server named: <CYA>{Model.Servers[guid].ServerName}");
-        if (!Model.Servers.TryGetValue(guid, out var serverData))
-            return;
-
-        Debug.Log<ClientState>($"<YEL>  " +
-            $"{(serverData.V4 is null ? "" : $"IPv4 : {serverData.V4}")} , " +
-            $"{(serverData.V6 is null ? "" : $"IPv6 : {serverData.V6}")}");
-
-        try
-        {
-            if (serverData.V4 is not null)
-                Model.TcpClient.Connect(serverData.V4.Address, serverData.V4.Port);
-            else if (serverData.V6 is not null)
-                Model.TcpClient.Connect(serverData.V6.Address, serverData.V6.Port);
-
-            NetworkStream stream = Model.TcpClient.GetStream();
-
-            //RECEIVE TEST ZONE // THERE SHOULD BE VALIDATION-SPECIFIED TALKING
-            //AND IF VALIDATION APPROVES THE CONNECTION WE SAVE THE SERVER
-            //AND ITS NETWORK STREAM FOR "COMMUNICATION" AND SET IsCommunicating TO true.
-            byte[] buffer = new byte[4096];
-            stream.Read(buffer, 0, 4096);
-            Debug.Log<ClientState>(Encoding.UTF32.GetString(buffer));
-            stream.Read(buffer, 0, 4096);
-            Debug.Log<ClientState>(Encoding.UTF32.GetString(buffer));
-            stream.Read(buffer, 0, 4096);
-            Debug.Log<ClientState>(Encoding.UTF32.GetString(buffer));
-        }
-        catch(Exception ex) { Debug.Exception(ex.Message, "no additional info."); }
-    }
-    
     #endregion
 }
