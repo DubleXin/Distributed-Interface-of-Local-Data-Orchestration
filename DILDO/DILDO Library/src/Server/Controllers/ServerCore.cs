@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using static StreamUtil;
 
 namespace DILDO.server;
 
@@ -111,9 +112,13 @@ public class ServerCore
         foreach (var user in ServerState.Instance.Data.Clients)
         {
             if (user.Value.Available == 0) continue;
-            NetworkStream stream = user.Value.GetStream();
-            string decodedMessage = Encoding.UTF8.GetString(StreamUtil.Read(stream));
 
+            NetworkStream stream = user.Value.GetStream();
+            var packet = ClassPacket.Deserialize(Read(stream));
+
+            if (packet.ClassName != typeof(string).Name) continue;
+
+            string decodedMessage = (string)packet.ClassData;
             if (TryParsingCommand(decodedMessage, user.Key))
                 continue;
 

@@ -1,5 +1,7 @@
 ﻿using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using static StreamUtil;
 
 namespace DILDO.client;
 
@@ -30,7 +32,8 @@ public class ClientCore
         {
             try
             {
-                var message = Encoding.UTF8.GetString(StreamUtil.Read(stream));
+                var message = ClassPacket.Deserialize(Read(stream));
+
                 Debug.Log<ClientState>($" <DYE>{message}");
             }
             catch (Exception ex)

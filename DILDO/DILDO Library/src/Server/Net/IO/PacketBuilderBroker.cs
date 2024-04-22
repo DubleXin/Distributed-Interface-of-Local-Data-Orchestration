@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System.Net.Sockets;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 
 namespace DILDO.net.IO
 {
@@ -6,6 +9,7 @@ namespace DILDO.net.IO
     {
         private MemoryStream _ms;
         public PacketBuilderBroker() => _ms = new();
+
         public void WriteOPCode(byte opCode) => _ms.WriteByte(opCode);
         public void WriteMessage(string message)
         {
