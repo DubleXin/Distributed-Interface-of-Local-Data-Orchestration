@@ -1,7 +1,6 @@
 ﻿using DILDO;
 using DILDO.client;
 using DILDO.client.models;
-using DILDO.server.models;
 
 #region READ ME
 
@@ -104,8 +103,8 @@ using DILDO.server.models;
 #if !UNITY_5_OR_NEWER
 public static class EnteringPoint
 {
-    private const string VERSION = "1.8.0";
-    private const string VERSION_NAME = "Hojicha Edition";
+    private const string VERSION = "1.9.0";
+    private const string VERSION_NAME = "Dragonwell Edition";
 
     [STAThread]
     public static int Main(string[] args)
@@ -270,6 +269,7 @@ public static class EnteringPoint
             Debug.Log($"<DYE>{(string)packet.ObjectData}");
         }
     }
+
     private static void DrawDILDOStart()
     {
         Debug.NonAuthLog("<DYE>__/\\\\\\\\\\\\\\\\\\\\\\\\______/\\\\\\\\\\\\\\\\\\\\\\___/\\\\\\_______________/\\\\\\\\\\\\\\\\\\\\\\\\___________/\\\\\\\\\\______        " +
