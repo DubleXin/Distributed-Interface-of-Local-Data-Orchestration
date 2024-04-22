@@ -37,10 +37,6 @@ public class ClientCore
                     && packet.ObjectData is not null
                     && !string.IsNullOrEmpty(packet.TypeName))
                     NetworkingOutput.EnqueuePacket(packet);
-
-                Debug.Log<ClientState>($" <DYE> got packet, that is " +
-                    $"\"{packet.TypeName}\" and " +
-                    $"{(packet.ObjectData is null? "is" : "is not")} null");
             }
             catch (Exception ex)
             {
