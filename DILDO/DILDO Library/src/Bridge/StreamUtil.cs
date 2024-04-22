@@ -41,13 +41,17 @@ public static class StreamUtil
     }
     public static void Write(NetworkStream stream, object obj)
     {
-        var classPacket = new Packet
+        var packet = new Packet
         {
             TypeName = obj.GetType().Name,
             ObjectData = obj
         };
 
-        WriteBytes(stream, Packet.Serialize(classPacket));
+        WriteBytes(stream, Packet.Serialize(packet));
+    }
+    public static void Write(NetworkStream stream, Packet packet)
+    {
+        WriteBytes(stream, Packet.Serialize(packet));
     }
     private static byte[]? ReadBytes(NetworkStream stream)
     {

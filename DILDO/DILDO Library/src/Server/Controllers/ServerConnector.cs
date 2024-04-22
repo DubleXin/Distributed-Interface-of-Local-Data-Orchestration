@@ -1,4 +1,5 @@
 ﻿using DILDO.server.models;
+using DILDO.server.models.connectors;
 using DILDO.server.core.factories;
 using DILDO.controllers;
 

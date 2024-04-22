@@ -1,4 +1,4 @@
-﻿using DILDO.server.models;
+﻿using DILDO.server.models.connectors;
 
 using System.Collections.Concurrent;
 using System.Net.Sockets;

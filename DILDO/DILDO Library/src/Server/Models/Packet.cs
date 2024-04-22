@@ -1,4 +1,4 @@
-﻿namespace DILDO.server.models
+﻿namespace DILDO.server.models.connectors
 {
     public enum OpCode
     {

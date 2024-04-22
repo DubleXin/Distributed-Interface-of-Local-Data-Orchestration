@@ -267,7 +267,7 @@ public static class EnteringPoint
             if(packet.TypeName != typeof(string).Name)
                 continue;
 
-            Debug.Log($" <DYE>{(string)packet.ObjectData}");
+            Debug.Log($"<DYE>{(string)packet.ObjectData}");
         }
     }
     private static void DrawDILDOStart()

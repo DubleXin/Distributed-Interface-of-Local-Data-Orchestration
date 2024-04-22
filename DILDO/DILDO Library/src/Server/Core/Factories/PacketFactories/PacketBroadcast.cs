@@ -1,4 +1,4 @@
-﻿using DILDO.server.models;
+﻿using DILDO.server.models.connectors;
 using DILDO.net.IO;
 
 using System.Text;

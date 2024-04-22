@@ -3,6 +3,7 @@ using DILDO.client;
 using DILDO.controllers;
 using DILDO.net.IO;
 using DILDO.server.models;
+using DILDO.server.models.connectors;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;

@@ -31,6 +31,19 @@ public class ServerCore
 
         Listener.Stop();
     }
+    private void AddPendingPacket(string[]? mask, Packet packet)
+    {
+        ServerState.Instance.Data.PendingPackets.Add((mask, packet));
+    }
+    private void AddPendingPacket(string[]? mask, object obj)
+    {
+        var packet = new Packet
+        {
+            TypeName = obj.GetType().Name,
+            ObjectData = obj
+        };
+        ServerState.Instance.Data.PendingPackets.Add((mask, packet));
+    }
 
     private void LifeCycle()
     {
@@ -56,13 +69,8 @@ public class ServerCore
 
             ServerState.Instance.Data.Clients.Add(username, Listener.AcceptTcpClient());
 
-            ServerState.Instance.Data.PendingMessages.Add(
-                (new string[] { username }, 
-                Encoding.UTF8.GetBytes($"You have connected to the server with username: {username}.")));
-            
-            ServerState.Instance.Data.PendingMessages.Add(
-                (GetAllApartFrom(username), 
-                Encoding.UTF8.GetBytes($"{username} connected to the server.")));
+            AddPendingPacket(new string[] { username }, $"You have connected to the server with username: {username}.");
+            AddPendingPacket(GetAllApartFrom(username), $"{username} connected to the server.");
 
             Debug.Log<ServerCore>($" \n<WHI>{username} connected.");
         }
@@ -78,8 +86,7 @@ public class ServerCore
         foreach (var client in faultyClientsBuffer)
         {
             ServerState.Instance.Data.Clients.Remove(client);
-            ServerState.Instance.Data.PendingMessages.Add(
-                (null, Encoding.UTF8.GetBytes($"{client} has disconnected from the server.")));
+            AddPendingPacket(null, $"{client} has disconnected from the server.");
 
             Debug.Log<ServerCore>($" <WHI>{client} disconnected.");
         }
@@ -117,23 +124,26 @@ public class ServerCore
             var packet = Read(stream);
 
             if (packet is null
-                || packet.TypeName != typeof(string).Name
+                || string.IsNullOrEmpty(packet.TypeName) 
                 || packet.ObjectData is null) 
                 continue;
 
-            string decodedMessage = (string)packet.ObjectData;
-            if (TryParsingCommand(decodedMessage, user.Key))
-                continue;
+            if (packet.TypeName == typeof(string).Name)
+            {
 
-            string message = $"[{DateTime.Now}] {user.Key} : {decodedMessage}";
-            byte[] encodedMessage = Encoding.UTF8.GetBytes(message);
+                string decodedMessage = (string)packet.ObjectData;
+                if (TryParsingCommand(decodedMessage, user.Key))
+                    continue;
 
-            ServerState.Instance.Data.PendingMessages.Add((null, encodedMessage));
+                packet.ObjectData = $"[{DateTime.Now}] {user.Key} : {decodedMessage}";
+            }
+
+            AddPendingPacket(null, packet);
         }
-        if (ServerState.Instance.Data.PendingMessages.Count > 0)
+        if (ServerState.Instance.Data.PendingPackets.Count > 0)
         {
             foreach (var user in ServerState.Instance.Data.Clients)
-            foreach (var entry in ServerState.Instance.Data.PendingMessages)
+            foreach (var entry in ServerState.Instance.Data.PendingPackets)
             {
                 if (entry.mask != null)
                 {
@@ -148,10 +158,10 @@ public class ServerCore
                 }
 
                 NetworkStream stream = user.Value.GetStream();
-                Write(stream, Encoding.UTF8.GetString(entry.encodedMessage));
+                Write(stream, entry.packet);
             }
         }
-        ServerState.Instance.Data.PendingMessages.Clear();
+        ServerState.Instance.Data.PendingPackets.Clear();
     }
     private bool TryParsingCommand(string message, string sender)
     {
@@ -165,8 +175,7 @@ public class ServerCore
             switch (commandParts[0])
             {
                 case "help":
-                    ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                        Encoding.UTF8.GetBytes("List of available commands:\n\t/help\n\t/setname or /sn\n\t/list\n\t/whisper or /w")));
+                    AddPendingPacket(new string[] { sender }, "List of available commands:\n\t/help\n\t/setname or /sn\n\t/list\n\t/whisper or /w");
                     break;
                 case "setname":
                     if (!string.IsNullOrEmpty(commandParts[1]))
@@ -174,20 +183,17 @@ public class ServerCore
                         string username = commandParts[1].ToLower();
                         if (ServerState.Instance.Data.Clients.ContainsKey(username))
                         {
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("You can not use this name, there is already a user with this name.")));
+                            AddPendingPacket(new string[] { sender }, "You can not use this name, there is already a user with this name.");
                         }
                         else
                         {
                             ServerState.Instance.Data.PendingUsernameChanges.Enqueue((sender, username));
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("Successfully changed name.")));
+                            AddPendingPacket(new string[] { sender }, "Successfully changed name.");
                         }
                     }
                     else
                     {
-                        ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                            Encoding.UTF8.GetBytes("You can not use this name, it is empty.")));
+                        AddPendingPacket(new string[] { sender },"You can not use this name, it is empty.");
                     }
                     break;
                 case "sn":
@@ -196,52 +202,43 @@ public class ServerCore
                         string username = commandParts[1].ToLower();
                         if (ServerState.Instance.Data.Clients.ContainsKey(username))
                         {
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("You can not use this name, there is already a user with this name.")));
+                            AddPendingPacket(new string[] { sender }, "You can not use this name, there is already a user with this name.");
                         }
                         else
                         {
                             ServerState.Instance.Data.PendingUsernameChanges.Enqueue((sender, username));
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("Successfully changed name.")));
+                            AddPendingPacket(new string[] { sender }, "Successfully changed name.");
                         }
                     }
                     else
                     {
-                        ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                            Encoding.UTF8.GetBytes("You can not use this name, it is empty.")));
+                        AddPendingPacket(new string[] { sender }, "You can not use this name, it is empty.");
                     }
                     break;
                 case "list":
                     string reply = "List of connected users:\n";
                     foreach (var client in ServerState.Instance.Data.Clients.Keys)
                         reply += $"\t{client}\n";
-                    ServerState.Instance.Data.PendingMessages.Add((new string[] { sender }, Encoding.UTF8.GetBytes(reply)));
+                    AddPendingPacket(new string[] { sender }, reply);
                     break;
                 case "whisper":
                     {
                         string targetName = commandParts[1];
                         if (string.IsNullOrEmpty(targetName))
                         {
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname, it was empty")));
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
+                            AddPendingPacket(new string[] { sender }, "Couldn't parse the target nickname, it was empty");
+                            AddPendingPacket(new string[] { sender }, "Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'");
                         }
                         else if (!ServerState.Instance.Data.Clients.ContainsKey(targetName))
                         {
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("There is no such player")));
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
+                            AddPendingPacket(new string[] { sender }, "There is no such player");
+                            AddPendingPacket(new string[] { sender }, "Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'");
                         }
                         else
                         {
                             var restoredMessage = potentialFullCommand.Substring(commandParts[0].Length + commandParts[1].Length + 2);
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { targetName },
-                                Encoding.UTF8.GetBytes($"[{DateTime.Now}] {sender} whispered to you: \"{restoredMessage}\"")));
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes($"[{DateTime.Now}] you whispered to {targetName}: \"{restoredMessage}\"")));
+                            AddPendingPacket(new string[] { targetName }, $"[{DateTime.Now}] {sender} whispered to you: \"{restoredMessage}\"");
+                            AddPendingPacket(new string[] { sender }, $"[{DateTime.Now}] you whispered to {targetName}: \"{restoredMessage}\"");
                         }
                         break;
                     }
@@ -250,31 +247,24 @@ public class ServerCore
                         string targetName = commandParts[1];
                         if (string.IsNullOrEmpty(targetName))
                         {
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname, it was empty")));
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
+                            AddPendingPacket(new string[] { sender }, "Couldn't parse the target nickname, it was empty");
+                            AddPendingPacket(new string[] { sender }, "Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'");
                         }
                         else if (!ServerState.Instance.Data.Clients.ContainsKey(targetName))
                         {
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("There is no such player")));
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
+                            AddPendingPacket(new string[] { sender }, "There is no such player");
+                            AddPendingPacket(new string[] { sender }, "Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'");
                         }
                         else
                         {
                             var restoredMessage = potentialFullCommand.Substring(commandParts[0].Length + commandParts[1].Length + 2);
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { targetName },
-                                Encoding.UTF8.GetBytes($"[{DateTime.Now}] {sender} whispered to you: \"{restoredMessage}\"")));
-                            ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                Encoding.UTF8.GetBytes($"[{DateTime.Now}] you whispered to {targetName}: \"{restoredMessage}\"")));
+                            AddPendingPacket(new string[] { targetName }, $"[{DateTime.Now}] {sender} whispered to you: \"{restoredMessage}\"");
+                            AddPendingPacket(new string[] { sender }, $"[{DateTime.Now}] you whispered to {targetName}: \"{restoredMessage}\"");
                         }
                         break;
                     }
                 default:
-                    ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                        Encoding.UTF8.GetBytes("Couldn't parse the command.")));
+                    AddPendingPacket(new string[] { sender }, "Couldn't parse the command.");
                     break;
             }
         }

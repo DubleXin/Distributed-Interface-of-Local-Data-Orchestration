@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using static DILDO.net.IO.PacketReaderBroker;
 
-namespace DILDO.server.models
+namespace DILDO.server.models.connectors
 {
     public struct UDPPacket
     {

@@ -1,4 +1,5 @@
 ﻿using System.Net.Sockets;
+using static StreamUtil;
 
 namespace DILDO.server.models
 {
@@ -11,7 +12,7 @@ namespace DILDO.server.models
         public Dictionary<string, TcpClient> Clients;
 
         public Queue<(string from, string to)> PendingUsernameChanges;
-        public List<(string[] mask, byte[] encodedMessage)> PendingMessages;
+        public List<(string[] mask, Packet packet)> PendingPackets;
 
         public readonly Guid ServerID;
 
@@ -20,7 +21,7 @@ namespace DILDO.server.models
             ServerID = Guid.NewGuid();
 
             Clients = new Dictionary<string, TcpClient>();
-            PendingMessages = new List<(string[], byte[])>();
+            PendingPackets = new List<(string[], Packet)>();
 
             PendingUsernameChanges = new Queue<(string from, string to)>();
         }
