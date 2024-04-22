@@ -114,11 +114,14 @@ public class ServerCore
             if (user.Value.Available == 0) continue;
 
             NetworkStream stream = user.Value.GetStream();
-            var packet = ClassPacket.Deserialize(Read(stream));
+            var packet = Read(stream);
 
-            if (packet.ClassName != typeof(string).Name) continue;
+            if (packet is null
+                || packet.TypeName != typeof(string).Name
+                || packet.ObjectData is null) 
+                continue;
 
-            string decodedMessage = (string)packet.ClassData;
+            string decodedMessage = (string)packet.ObjectData;
             if (TryParsingCommand(decodedMessage, user.Key))
                 continue;
 
@@ -145,7 +148,7 @@ public class ServerCore
                 }
 
                 NetworkStream stream = user.Value.GetStream();
-                StreamUtil.Write(stream, entry.encodedMessage);
+                Write(stream, Encoding.UTF8.GetString(entry.encodedMessage));
             }
         }
         ServerState.Instance.Data.PendingMessages.Clear();

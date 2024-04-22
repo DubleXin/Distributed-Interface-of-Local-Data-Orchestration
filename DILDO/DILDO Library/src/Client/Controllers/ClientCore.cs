@@ -32,9 +32,15 @@ public class ClientCore
         {
             try
             {
-                var message = ClassPacket.Deserialize(Read(stream));
+                var packet = Read(stream);
+                if(packet is not null 
+                    && packet.ObjectData is not null
+                    && !string.IsNullOrEmpty(packet.TypeName))
+                    NetworkingOutput.EnqueuePacket(packet);
 
-                Debug.Log<ClientState>($" <DYE>{message}");
+                Debug.Log<ClientState>($" <DYE> got packet, that is " +
+                    $"\"{packet.TypeName}\" and " +
+                    $"{(packet.ObjectData is null? "is" : "is not")} null");
             }
             catch (Exception ex)
             {
@@ -86,14 +92,13 @@ public class ClientCore
         Debug.Log<ClientCore>(" <DGE>Successfully disconnected from server ");
     }
 
-    public void Send(string pInput)
+    public void Send(object obj)
     {
-        if (pInput == null || pInput.Length == 0) return;
-
+        if (obj == null) 
+            return;
         try
         {
-            byte[] outBytes = Encoding.UTF8.GetBytes(pInput);
-            StreamUtil.Write(TcpClient.GetStream(), outBytes);
+            Write(TcpClient.GetStream(), obj);
         }
         catch (Exception e)
         {

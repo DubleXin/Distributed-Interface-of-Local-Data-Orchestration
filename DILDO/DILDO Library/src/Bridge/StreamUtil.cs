@@ -1,48 +1,67 @@
 ﻿using System.Net.Sockets;
 using System.Runtime.Serialization;
-using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
+#pragma warning disable SYSLIB0011 
 public static class StreamUtil
 {
     
     [Serializable]
-    public class ClassPacket
+    public class Packet
     {
-        public required string ClassName { get; set; }
-        public required object ClassData { get; set; }
+        public required string TypeName { get; set; }
+        public required object ObjectData { get; set; }
 
-        public static ClassPacket Deserialize(byte[] byteArray)
+        public static byte[] Serialize(Packet obj)
         {
-            using (MemoryStream memoryStream = new MemoryStream(byteArray))
+            BinaryFormatter bf = new();
+            using (var ms = new MemoryStream())
             {
-                DataContractSerializer serializer = new DataContractSerializer(typeof(ClassPacket));
-                return (ClassPacket)serializer.ReadObject(memoryStream);
+                bf.Serialize(ms, obj);
+                return ms.ToArray();
+            }
+        }
+
+        public static Packet Deserialize(byte[] arrBytes)
+        {
+            using (var memStream = new MemoryStream())
+            {
+                var binForm = new BinaryFormatter();
+                memStream.Write(arrBytes, 0, arrBytes.Length);
+                memStream.Seek(0, SeekOrigin.Begin);
+                var obj = (Packet)binForm.Deserialize(memStream);
+                return obj;
             }
         }
     }
-
-    private static DataContractSerializer _serializer = new(typeof(ClassPacket));
-    public static void Write(NetworkStream pStream, byte[] pBytes)
+    private static void WriteBytes(NetworkStream stream, byte[] bytes)
     {
-        pStream.Write(BitConverter.GetBytes(pBytes.Length), 0, 4);
-        pStream.Write(pBytes, 0, pBytes.Length);
+        stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
+        stream.Write(bytes, 0, bytes.Length);
     }
-    public static void Write(NetworkStream pstream, object obj) => WriteObject(obj, pstream);
-    private static void WriteObject(object obj, NetworkStream stream)
+    public static void Write(NetworkStream stream, object obj)
     {
-        var classPacket = new ClassPacket
+        var classPacket = new Packet
         {
-            ClassName = obj.GetType().Name,
-            ClassData = obj
+            TypeName = obj.GetType().Name,
+            ObjectData = obj
         };
 
-        _serializer.WriteObject(stream, classPacket);
+        WriteBytes(stream, Packet.Serialize(classPacket));
     }
-    public static byte[]? Read(NetworkStream pStream)
+    private static byte[]? ReadBytes(NetworkStream stream)
     {
-        int byteCountToRead = BitConverter.ToInt32(Read(pStream, 4), 0);
-        return Read(pStream, byteCountToRead);
+        int byteCountToRead = BitConverter.ToInt32(Read(stream, 4), 0);
+        return Read(stream, byteCountToRead);
+    }
+
+    public static Packet? Read(NetworkStream stream)
+    {
+        byte[] bytes = ReadBytes(stream);
+        if (bytes == null || bytes.Length <= 4)
+            return null;
+
+        return Packet.Deserialize(bytes);
     }
 
     private static byte[]? Read(NetworkStream pStream, int pByteCount)

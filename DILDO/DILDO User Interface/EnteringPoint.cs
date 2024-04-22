@@ -1,6 +1,7 @@
 ﻿using DILDO;
 using DILDO.client;
 using DILDO.client.models;
+using DILDO.server.models;
 
 #region READ ME
 
@@ -103,8 +104,8 @@ using DILDO.client.models;
 #if !UNITY_5_OR_NEWER
 public static class EnteringPoint
 {
-    private const string VERSION = "1.7.3";
-    private const string VERSION_NAME = "Matcha Tea Edition";
+    private const string VERSION = "1.8.0";
+    private const string VERSION_NAME = "Hojicha Edition";
 
     [STAThread]
     public static int Main(string[] args)
@@ -176,6 +177,7 @@ public static class EnteringPoint
                     UserName = name,
                     State = parts[1] == "s" ? NetworkingState.SERVER : NetworkingState.CLIENT
                 });
+                NetworkingOutput.OnPacketReceivedAsync += ProcessPackets;
             }
 
             else if (parts.Length == 2 && parts[0] == "switch")
@@ -257,6 +259,17 @@ public static class EnteringPoint
         }
     }
 
+    private static void ProcessPackets()
+    {
+        var packets = NetworkingOutput.DequeueAllPackets();
+        foreach (var packet in packets)
+        {
+            if(packet.TypeName != typeof(string).Name)
+                continue;
+
+            Debug.Log($" <DYE>{(string)packet.ObjectData}");
+        }
+    }
     private static void DrawDILDOStart()
     {
         Debug.NonAuthLog("<DYE>__/\\\\\\\\\\\\\\\\\\\\\\\\______/\\\\\\\\\\\\\\\\\\\\\\___/\\\\\\_______________/\\\\\\\\\\\\\\\\\\\\\\\\___________/\\\\\\\\\\______        " +

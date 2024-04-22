@@ -8,6 +8,11 @@ public static class NetworkingInput
 {
     public static void Init(UserData owner) 
     {
+#if UNITY_5_OR_NEWER
+        if (!NetworkingOutput.SubscribeToSyncThread())
+            Debug.Exception("NetworkingInput.Init(User user) actively refuses",
+                "Already initialized");
+#endif
         if (!NetworkingData.Init(owner))
             Debug.Exception("NetworkingInput.Init(User user) actively refuses", 
                 "Already initialized");
@@ -119,20 +124,20 @@ public static class NetworkingInput
             Debug.Exception("Connect(int index) NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
-    public static void Send(string message) //TODO OBJECT / PACKET
+    public static void Send(object obj)
     {
         if (StateBroker.Instance is not null)
             if (StateBroker.Instance.IsClient)
                 if (ClientState.Instance.Core.ConnectedServer != Guid.Empty)
-                    ClientState.Instance.Core.Send(message);
+                    ClientState.Instance.Core.Send(obj);
                 else
-                    Debug.Exception("Send(object message) NotConnectedTCPException",
+                    Debug.Exception("Send(object obj) NotConnectedTCPException",
                         "Client wasn't connected to server, connect to Server");
             else
-                Debug.Exception("Send(object message) WrongStateContextException",
+                Debug.Exception("Send(object obj) WrongStateContextException",
                     "Current networking state is not suitable, switch to \"Client\"");
         else
-            Debug.Exception("Send(object message) NullReferenceException",
+            Debug.Exception("Send(object obj) NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
     public static void Disconnect()
@@ -142,13 +147,13 @@ public static class NetworkingInput
                 if (ClientState.Instance.Core.ConnectedServer != Guid.Empty)
                     ClientState.Instance.Core.Disconnect();
                 else
-                    Debug.Exception("Send(object message) NotConnectedTCPException",
+                    Debug.Exception("Disconnect() NotConnectedTCPException",
                         "Already disconnected");
             else
-                Debug.Exception("Send(object message) WrongStateContextException",
+                Debug.Exception("Disconnect() WrongStateContextException",
                     "Current networking state is not suitable, switch to \"Client\"");
         else
-            Debug.Exception("Send(object message) NullReferenceException",
+            Debug.Exception("Disconnect() NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
 }
