@@ -79,6 +79,8 @@ public class ServerCore
             ServerState.Instance.Data.Clients.Remove(client);
             ServerState.Instance.Data.PendingMessages.Add(
                 (null, Encoding.UTF8.GetBytes($"{client} has disconnected from the server.")));
+
+            Debug.Log<ServerCore>($" <WHI>{client} disconnected.");
         }
     }
     private string[] GetAllApartFrom(string key)
@@ -117,10 +119,8 @@ public class ServerCore
 
             string message = $"[{DateTime.Now}] {user.Key} : {decodedMessage}";
             byte[] encodedMessage = Encoding.UTF8.GetBytes(message);
-            StreamUtil.Write(stream, encodedMessage);
 
-            ServerState.Instance.Data.PendingMessages.Add((GetAllApartFrom(user.Key), encodedMessage));
-
+            ServerState.Instance.Data.PendingMessages.Add((null, encodedMessage));
         }
         if (ServerState.Instance.Data.PendingMessages.Count > 0)
         {
@@ -218,14 +218,14 @@ public class ServerCore
                             ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
                                 Encoding.UTF8.GetBytes("Couldn't parse the target nickname, it was empty")));
                             ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                  Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
+                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
                         }
                         else if (!ServerState.Instance.Data.Clients.ContainsKey(targetName))
                         {
                             ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
                                 Encoding.UTF8.GetBytes("There is no such player")));
                             ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                  Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
+                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
                         }
                         else
                         {
@@ -245,14 +245,14 @@ public class ServerCore
                             ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
                                 Encoding.UTF8.GetBytes("Couldn't parse the target nickname, it was empty")));
                             ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                  Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
+                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
                         }
                         else if (!ServerState.Instance.Data.Clients.ContainsKey(targetName))
                         {
                             ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
                                 Encoding.UTF8.GetBytes("There is no such player")));
                             ServerState.Instance.Data.PendingMessages.Add((new string[] { sender },
-                                  Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
+                                Encoding.UTF8.GetBytes("Couldn't parse the target nickname due to invalid formatting, format should be -> '/w or /whisper <name> <message>'")));
                         }
                         else
                         {

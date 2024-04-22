@@ -9,8 +9,8 @@ namespace DILDO.server.models
         public const ushort DEFAULT_SERVER_SEND_PORT = 8000;
 
         public Dictionary<string, TcpClient> Clients;
-        public Queue<(string from, string to)> PendingUsernameChanges;
 
+        public Queue<(string from, string to)> PendingUsernameChanges;
         public List<(string[] mask, byte[] encodedMessage)> PendingMessages;
 
         public readonly Guid ServerID;

@@ -53,10 +53,6 @@ public class ClientCore
         if (!ClientState.Instance.Data.Servers.TryGetValue(guid, out var serverData))
             return;
 
-        Debug.Log<ClientState>($"<YEL>  " +
-            $"{(serverData.V4 is null ? "" : $"IPv4 : {serverData.V4}")} , " +
-            $"{(serverData.V6 is null ? "" : $"IPv6 : {serverData.V6}")}");
-
         try
         {
             TcpClient = new TcpClient();

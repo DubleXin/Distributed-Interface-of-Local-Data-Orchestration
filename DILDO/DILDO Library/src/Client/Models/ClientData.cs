@@ -8,9 +8,7 @@ namespace DILDO.client.models
         public ConcurrentDictionary<Guid, ServerData>? Servers { get; private set; }
 
         public Guid ConnectedTo { get; set; }
-
         public Guid ID { get; private set; }
-
 
         public ClientData()
         {

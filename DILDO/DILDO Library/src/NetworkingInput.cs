@@ -20,7 +20,6 @@ public static class NetworkingInput
             Debug.Exception("NetworkingInput.Switch(NetworkingState state) NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
-
     public static void SetPairing(bool state)
     {
         if (StateBroker.Instance is not null)
@@ -43,7 +42,6 @@ public static class NetworkingInput
             Debug.Exception("SetPairing(bool state) NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
-
     public static (Guid guid, string name)[]? GetAvailableServers()
     {
         if (StateBroker.Instance is not null)
@@ -65,7 +63,6 @@ public static class NetworkingInput
 
         return null;
     }
-
     public static void ConfigurateServer(int broadcastTickRate = 64)
     {
         if (StateBroker.Instance is not null)
@@ -90,7 +87,6 @@ public static class NetworkingInput
             Debug.Exception("ConfigurateServer(...) NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
-
     public static void Connect(int index)
     {
         if (StateBroker.Instance is not null)
@@ -123,7 +119,6 @@ public static class NetworkingInput
             Debug.Exception("Connect(int index) NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
-
     public static void Send(string message) //TODO OBJECT / PACKET
     {
         if (StateBroker.Instance is not null)
@@ -140,7 +135,6 @@ public static class NetworkingInput
             Debug.Exception("Send(object message) NullReferenceException",
                 "StateBroker.Instance is null, NetworkingData wasn't initialized");
     }
-
     public static void Disconnect()
     {
         if (StateBroker.Instance is not null)
