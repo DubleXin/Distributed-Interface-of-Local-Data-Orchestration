@@ -1,7 +1,8 @@
 
 Usage Pipeline:
-> :
-![image](https://github.com/DubleXin/Distributed-Interface-of-Local-Data-Orchestration/assets/87417121/b67c60f4-8143-469a-b084-66912be1ad8e)
+
+![image](https://github.com/DubleXin/Distributed-Interface-of-Local-Data-Orchestration/assets/87417121/78a85571-f52a-4e88-bf6b-c540abf4e4a7)
+
 
 Usage Pipeline (Example in separate interface project "DILDO Interface")
 
