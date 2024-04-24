@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System.Collections.Concurrent;
+using System.Net.Sockets;
 using static StreamUtil;
 
 namespace DILDO.server.models
@@ -21,8 +22,8 @@ namespace DILDO.server.models
             ServerID = Guid.NewGuid();
 
             Clients = new Dictionary<string, TcpClient>();
-            PendingPackets = new List<(string[], Packet)>();
 
+            PendingPackets = new List<(string[], Packet)>();
             PendingUsernameChanges = new Queue<(string from, string to)>();
         }
     }

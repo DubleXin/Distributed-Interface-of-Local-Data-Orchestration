@@ -1,6 +1,6 @@
-﻿using System.Net;
+﻿using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using static StreamUtil;
 
 namespace DILDO.server;
@@ -52,8 +52,6 @@ public class ServerCore
             ProcessNewClients();
             ProcessExistingClients();
             CheckFaultyClients();
-
-            Thread.Sleep(100);
         }
     }
 
@@ -72,23 +70,39 @@ public class ServerCore
             AddPendingPacket(new string[] { username }, $"You have connected to the server with username: {username}.");
             AddPendingPacket(GetAllApartFrom(username), $"{username} connected to the server.");
 
-            Debug.Log<ServerCore>($" \n<WHI>{username} connected.");
+            Debug.Log<ServerCore>($" <WHI>{username} connected.");
         }
     }
     private void CheckFaultyClients()
     {
-        List<string> faultyClientsBuffer = new List<string>();
+        ConcurrentBag<string> faultyClientsBuffer = new ConcurrentBag<string>();
+        Task[] clientPolls = new Task[ServerState.Instance.Data.Clients.Count];
+        int i = 0;
+
         foreach (var client in ServerState.Instance.Data.Clients)
         {
-            if (!client.Value.Connected)
-                faultyClientsBuffer.Add(client.Key);
+            clientPolls[i++] = Task.Run(() =>
+            {
+                try
+                {
+                    byte[] buffer = new byte[1];
+
+                    var stream = client.Value.GetStream();
+                    stream.Read(buffer, 0, 0);
+                }
+                catch { }
+
+                if (!client.Value.Connected && !faultyClientsBuffer.Contains(client.Key))
+                    faultyClientsBuffer.Add(client.Key);
+            });
         }
+        Task.WaitAll(clientPolls, 32);
         foreach (var client in faultyClientsBuffer)
         {
             ServerState.Instance.Data.Clients.Remove(client);
             AddPendingPacket(null, $"{client} has disconnected from the server.");
 
-            Debug.Log<ServerCore>($" <WHI>{client} disconnected.");
+            Debug.Log<ServerCore>($" <WHI>{client} disconnected, due to unpredicted socket close.");
         }
     }
     private string[] GetAllApartFrom(string key)
@@ -118,7 +132,7 @@ public class ServerCore
 
         foreach (var user in ServerState.Instance.Data.Clients)
         {
-            if (user.Value.Available == 0) continue;
+            if (user.Value.Available <= 4) continue;
 
             NetworkStream stream = user.Value.GetStream();
             var packet = Read(stream);
@@ -174,6 +188,11 @@ public class ServerCore
 
             switch (commandParts[0])
             {
+                case "disconnect":
+                    ServerState.Instance.Data.Clients.Remove(sender);
+                    AddPendingPacket(null, $"{sender} has disconnected from the server.");
+                    Debug.Log<ServerCore>($" <WHI>{sender} disconnected");
+                    break;
                 case "help":
                     AddPendingPacket(new string[] { sender }, "List of available commands:\n\t/help\n\t/setname or /sn\n\t/list\n\t/whisper or /w");
                     break;

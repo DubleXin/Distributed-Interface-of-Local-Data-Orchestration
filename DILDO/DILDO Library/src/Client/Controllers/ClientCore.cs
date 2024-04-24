@@ -1,6 +1,5 @@
-﻿using System.Net.Sockets;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
+﻿using System.Net.Http;
+using System.Net.Sockets;
 using static StreamUtil;
 
 namespace DILDO.client;
@@ -21,7 +20,9 @@ public class ClientCore
     public void Close()
     {
         _active = false;
-        _current.Wait();
+        if(_current is not null)
+            _current.Wait();
+
         ConnectedServer = Guid.Empty;
     }
 
@@ -50,6 +51,7 @@ public class ClientCore
         }
     }
 
+
     public void Connect(Guid guid)
     {
         Debug.Log<ClientState>($"<DMA> Requesting connection to server named: <CYA>" +
@@ -68,6 +70,7 @@ public class ClientCore
                 TcpClient.Connect(serverData.V6.Address, serverData.V6.Port);
 
             NetworkStream stream = TcpClient.GetStream();
+
             _current = Task.Run(LifeCycle);
 
             ConnectedServer = guid;
@@ -81,13 +84,24 @@ public class ClientCore
     }
     public void Disconnect()
     {
-        TcpClient.Close();
-        Close();
-        _active = true;
+        try
+        {
+            Send("/disconnect");
+            TcpClient.Close();
 
-        Debug.Log<ClientCore>(" <DGE>Successfully disconnected from server ");
+            _active = false;
+            _current.Wait(); 
+
+            ConnectedServer = Guid.Empty;
+            _active = true;
+
+            Debug.Log<ClientCore>(" <DGE>Successfully disconnected from server ");
+        }
+        catch (Exception e)
+        {
+            Debug.Exception(e.Message, "no additional info.");
+        }
     }
-
     public void Send(object obj)
     {
         if (obj == null) 
